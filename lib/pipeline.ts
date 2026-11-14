@@ -7,7 +7,7 @@ import { ApiError } from "./errors";
 import { extractClaims } from "./claims";
 import { getDecider } from "./decide";
 import { getPerceiver } from "./perceive";
-import { detectKind, lexicalReceipts, notFoundReceipt } from "./perceive/local";
+import { detectKind, lexicalReceipts, notFoundReceipt, parseLocal } from "./perceive/local";
 import { adobeAnnotations, adobeDocId, highlightFor, pdfLayout } from "./pdf/highlight";
 
 export const LIMITS = {
@@ -33,6 +33,22 @@ export interface CheckInput {
 
 const ms = (t0: number) => Math.round(performance.now() - t0);
 
+/** Time budgets that keep a check inside Vercel's 120 s limit even when a provider is slow (worst case about 35 + 75 s). */
+export const BUDGET = {
+  parseMs: 35_000,         // then the built-in reader takes over
+  groundMs: 40_000,        // then the built-in matcher takes over
+  decideMs: 75_000,        // then the check fails with a clear error (there are no verdicts without the decider)
+  profileMs: 15_000,       // key facts (classify + extract, about 5 s) get this long from their start...
+  profileGraceMs: 1_000,   // ...and at least this long after everything else; then they are left out
+};
+
+class Overtime extends Error {}
+/** Resolves like `p`, or rejects with Overtime after `limit` ms. `p` keeps running; its late result is ignored. */
+function within<T>(p: Promise<T>, limit: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  return Promise.race([p, new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Overtime()), limit); })]).finally(() => clearTimeout(timer));
+}
+
 export async function checkDocument(input: CheckInput, cfg: Config = getConfig()): Promise<CheckResult> {
   const tStart = performance.now();
   const aiText = input.aiText ?? "";
@@ -52,7 +68,17 @@ export async function checkDocument(input: CheckInput, cfg: Config = getConfig()
 
   // 1. Read the source once.
   const tParse = performance.now();
-  const doc = input.parsedDoc ?? (await perceiver.parse(input.source));
+  let doc: SourceDocument;
+  if (input.parsedDoc) doc = input.parsedDoc;
+  else {
+    try {
+      doc = await within(perceiver.parse(input.source), BUDGET.parseMs);
+    } catch (err) {
+      if (!(err instanceof Overtime)) throw err;
+      doc = await parseLocal(input.source);
+      warnings.push(`${perceiver.label} took over ${BUDGET.parseMs / 1000} s to read the source; used the built-in reader.`);
+    }
+  }
   const parseMs = ms(tParse);
   input.onDocument?.(doc);
   if (perceiver.warnings?.length) warnings.push(...perceiver.warnings.splice(0));
@@ -66,18 +92,23 @@ export async function checkDocument(input: CheckInput, cfg: Config = getConfig()
   let groundMs = 0;
   const decidePromise = (async () => {
     const t = performance.now();
-    const r = await decider.decide(doc, claims, input.context);
-    decideMs = ms(t);
-    return r;
+    try {
+      const r = await within(decider.decide(doc, claims, input.context), BUDGET.decideMs);
+      decideMs = ms(t);
+      return r;
+    } catch (err) {
+      if (err instanceof Overtime) throw new ApiError(504, "provider_timeout", `${decider.label} did not answer within ${BUDGET.decideMs / 1000} s. Try again.`);
+      throw err;
+    }
   })();
   const groundPromise = (async () => {
     const t = performance.now();
     try {
-      const r = await perceiver.ground(doc, claims);
+      const r = await within(perceiver.ground(doc, claims), BUDGET.groundMs);
       groundMs = ms(t);
       return r;
     } catch (err) {
-      const why = err instanceof Error ? err.message : String(err);
+      const why = err instanceof Overtime ? `no answer within ${BUDGET.groundMs / 1000} s` : err instanceof Error ? err.message : String(err);
       warnings.push(`${perceiver.label} could not find receipts (${why}); used the built-in matcher.`);
       const receipts = lexicalReceipts(doc, claims);
       groundMs = ms(t);
@@ -89,22 +120,29 @@ export async function checkDocument(input: CheckInput, cfg: Config = getConfig()
     ? (async () => {
         const t = performance.now();
         try {
-          const r = await rival.decide(doc, claims, input.context);
+          const r = await within(rival.decide(doc, claims, input.context), BUDGET.decideMs);
           return { r, ms: ms(t) };
         } catch (err) {
-          warnings.push(`The comparison decider (${rival.label}) failed: ${err instanceof Error ? err.message : String(err)}`);
+          warnings.push(`The comparison decider (${rival.label}) failed: ${err instanceof Overtime ? `no answer within ${BUDGET.decideMs / 1000} s` : err instanceof Error ? err.message : String(err)}`);
           return null;
         }
       })()
     : Promise.resolve(null);
   // What the document is and its key facts (NDI classify + extract). Optional: never fails the check.
+  const profileStart = performance.now();
   const profilePromise: Promise<ProfileResult | null> = perceiver.profile && !input.skipProfile
     ? perceiver.profile(doc).catch((err) => {
         warnings.push(`${perceiver.label} could not profile the document (${err instanceof Error ? err.message : String(err)}).`);
         return null;
       })
     : Promise.resolve(null);
-  const [decided, grounded, rivalRun, profiled] = await Promise.all([decidePromise, groundPromise, comparePromise, profilePromise]);
+  const [decided, grounded, rivalRun] = await Promise.all([decidePromise, groundPromise, comparePromise]);
+  // Key facts never hold the check up: they get a short grace period after everything else.
+  const profileLeft = Math.max(BUDGET.profileGraceMs, BUDGET.profileMs - (performance.now() - profileStart));
+  const profiled = await within(profilePromise, profileLeft).catch(() => {
+    warnings.push(`${perceiver.label} key facts took too long and were left out.`);
+    return null;
+  });
   if (profiled?.warnings.length) warnings.push(...profiled.warnings);
   const keyFacts = profiled?.keyFacts ?? [];
   if (grounded.warnings?.length) warnings.push(...grounded.warnings);
