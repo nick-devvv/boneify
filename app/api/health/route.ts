@@ -1,5 +1,6 @@
 import { getConfig, VERSION } from "../../../lib/config";
 import { json, options } from "../../../lib/api";
+import { internProblem } from "../../../lib/fix/intern";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +20,10 @@ export function GET(): Response {
       { id: "llm", label: cfg.llmLabel, model: cfg.llmModel, ready: llm, ...(llm ? {} : { note: "Set LLM_API_KEY to enable." }) },
       { id: "drex", label: "Drex", model: cfg.drexModel, ready: nace, ...(nace ? {} : { note: naceNote }) },
     ],
+    intern: (() => {
+      const why = internProblem(cfg);
+      return { label: "Intern (Nace agent harness)", system1: cfg.internSystem1, system2: cfg.internSystem2, ready: !why, ...(why ? { note: why } : {}) };
+    })(),
     perceivers: [
       { id: "local", label: "Built-in reader (offline)", ready: true },
       { id: "ndi", label: "NDI (Nace Document Intelligence)", ready: nace, ...(nace ? {} : { note: naceNote }) },

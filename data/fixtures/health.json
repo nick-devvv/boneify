@@ -27,6 +27,13 @@
       "note": "Set NACE_API_KEY to enable."
     }
   ],
+  "intern": {
+    "label": "Intern (Nace agent harness)",
+    "system1": "drex-latest",
+    "system2": "deepinfra/Qwen/Qwen3.8-27B",
+    "ready": false,
+    "note": "Set NACE_API_KEY: Intern asks Drex for its decisions."
+  },
   "perceivers": [
     {
       "id": "local",

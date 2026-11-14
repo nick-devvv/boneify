@@ -1,7 +1,7 @@
 // checkDocument(): read the source once, split the AI text, decide + ground in parallel, combine into a CheckResult.
 
 import { randomUUID } from "node:crypto";
-import type { CheckResult, CheckedClaim, Comparison, DecideContext, ProfileResult, Receipt, SourceInput, Usage } from "./types";
+import type { CheckResult, CheckedClaim, Comparison, DecideContext, ProfileResult, Receipt, SourceDocument, SourceInput, Usage } from "./types";
 import { getConfig, type Config } from "./config";
 import { ApiError } from "./errors";
 import { extractClaims } from "./claims";
@@ -26,6 +26,9 @@ export interface CheckInput {
   reviewThreshold?: number;
   compare?: string;          // race a second decider on the same document and claims
   pdfBytes?: Uint8Array;     // the PDF to place highlights on, when the source text came from a PDF (e.g. a sample)
+  parsedDoc?: SourceDocument; // skip reading: reuse a document already read by the same perceiver (the fix loop's re-check)
+  onDocument?: (doc: SourceDocument) => void; // receives the document once read
+  skipProfile?: boolean;     // leave out NDI classify + extract (the fix loop's re-check copies them from the first check)
 }
 
 const ms = (t0: number) => Math.round(performance.now() - t0);
@@ -49,8 +52,9 @@ export async function checkDocument(input: CheckInput, cfg: Config = getConfig()
 
   // 1. Read the source once.
   const tParse = performance.now();
-  const doc = await perceiver.parse(input.source);
+  const doc = input.parsedDoc ?? (await perceiver.parse(input.source));
   const parseMs = ms(tParse);
+  input.onDocument?.(doc);
   if (perceiver.warnings?.length) warnings.push(...perceiver.warnings.splice(0));
   if (!doc.text.trim()) throw new ApiError(422, "empty_source", "The source document has no text.");
   if (doc.text.length > LIMITS.sourceChars) {
@@ -94,7 +98,7 @@ export async function checkDocument(input: CheckInput, cfg: Config = getConfig()
       })()
     : Promise.resolve(null);
   // What the document is and its key facts (NDI classify + extract). Optional: never fails the check.
-  const profilePromise: Promise<ProfileResult | null> = perceiver.profile
+  const profilePromise: Promise<ProfileResult | null> = perceiver.profile && !input.skipProfile
     ? perceiver.profile(doc).catch((err) => {
         warnings.push(`${perceiver.label} could not profile the document (${err instanceof Error ? err.message : String(err)}).`);
         return null;
