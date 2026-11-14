@@ -7,7 +7,8 @@ import { ApiError } from "./errors";
 import { extractClaims } from "./claims";
 import { getDecider } from "./decide";
 import { getPerceiver } from "./perceive";
-import { lexicalReceipts, notFoundReceipt } from "./perceive/local";
+import { detectKind, lexicalReceipts, notFoundReceipt } from "./perceive/local";
+import { adobeAnnotations, adobeDocId, highlightFor, pdfLayout } from "./pdf/highlight";
 
 export const LIMITS = {
   fileBytes: 4 * 1024 * 1024,
@@ -24,6 +25,7 @@ export interface CheckInput {
   perceiver?: string;
   reviewThreshold?: number;
   compare?: string;          // race a second decider on the same document and claims
+  pdfBytes?: Uint8Array;     // the PDF to place highlights on, when the source text came from a PDF (e.g. a sample)
 }
 
 const ms = (t0: number) => Math.round(performance.now() - t0);
@@ -107,7 +109,38 @@ export async function checkDocument(input: CheckInput, cfg: Config = getConfig()
     }
     return { ...c, verdict: d.verdict, probabilities: d.probabilities, confidence: d.confidence, needsReview: d.confidence < threshold, receipt };
   });
+  // A sentence judged correct should always show its evidence: if the perceiver found none, use the built-in matcher.
+  const bare = checked.filter((c) => c.verdict === "supported" && c.receipt.status === "not_found");
+  if (bare.length) {
+    const extra = lexicalReceipts(doc, bare);
+    for (const c of bare) if (extra[c.id]?.status === "found") c.receipt = extra[c.id];
+  }
   if (missingReceipts) warnings.push(`${perceiver.label} returned no receipt for ${missingReceipts} sentence${missingReceipts === 1 ? "" : "s"}; used the built-in matcher.`);
+
+  // 5. Highlights on the PDF itself, for the Adobe viewer.
+  const pdf = input.pdfBytes ?? (input.source.kind === "file" && detectKind(input.source.name, input.source.mimeType) === "pdf" ? input.source.bytes : undefined);
+  let docId: string | null = null;
+  let annotations: unknown[] = [];
+  for (const c of checked) c.receipt = { ...c.receipt, highlight: null };
+  if (pdf) {
+    try {
+      const layout = await pdfLayout(pdf);
+      const lineAround = (start: number | null, end: number | null) => {
+        if (start === null) return null;
+        const a = doc.text.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+        const nl = doc.text.indexOf("\n", end ?? start);
+        return doc.text.slice(a, nl < 0 ? doc.text.length : nl);
+      };
+      for (const c of checked) {
+        if (c.receipt.status !== "found") continue;
+        c.receipt.highlight = highlightFor(layout, c.receipt.quote, c.receipt.page, lineAround(c.receipt.charStart, c.receipt.charEnd));
+      }
+      docId = adobeDocId(pdf);
+      annotations = adobeAnnotations(docId, checked);
+    } catch (err) {
+      warnings.push(`Could not place highlights on the PDF (${err instanceof Error ? err.message : String(err)}).`);
+    }
+  }
 
   let comparison: Comparison | null | undefined;
   if (rival) {
@@ -149,5 +182,7 @@ export async function checkDocument(input: CheckInput, cfg: Config = getConfig()
     usage,
     warnings,
     ...(comparison !== undefined ? { comparison } : {}),
+    adobeDocId: docId,
+    adobeAnnotations: annotations,
   };
 }

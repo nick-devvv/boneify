@@ -31,6 +31,30 @@
   },
   "runs": [
     {
+      "run": "drex",
+      "label": "Drex Max v1.1",
+      "decider": "drex",
+      "model": "drex-latest",
+      "createdAt": "2026-11-14T18:58:17.052Z",
+      "dataset": {
+        "name": "RAGTruth",
+        "split": "test",
+        "examples": 450,
+        "sentences": 3041
+      },
+      "headline": {
+        "sentenceF1": 0.5615,
+        "sentencePrecision": 0.406,
+        "sentenceRecall": 0.9098,
+        "responseF1": 0.7657,
+        "threeWayAccuracy": 0.8671,
+        "p50LatencyMs": 317,
+        "meanLatencyMs": 328,
+        "costPerThousandSentencesUsd": 0.014571,
+        "totalCostUsd": 0.044311
+      }
+    },
+    {
       "run": "local",
       "label": "Simple rules (offline)",
       "decider": "local",

@@ -32,3 +32,19 @@ Places where docs/MVP_SPEC.md was unclear or contradicted itself, and the simple
 25. **`comparison` appears only when the request sends `compare`.** An unknown `compare` engine is `400 unknown_engine` (like `decider`); a comparison decider that fails gives `comparison: null` plus a warning, and the check still returns 200.
 26. **`receipt.section`** is the last clause number found at the start of a line between the start of the receipt's line and its end, so "2. TERM\n2.1 Initial Term. ..." gives "2.1". Matches `2.1`, `§3.2`, `Article 4`, `Section 5`, `Clause 7`, and `3.` (returned as "3").
 27. **`POST /api/split`** errors: missing or empty `text` is `400 missing_ai_text`, over 20,000 characters is `413 too_large`. Text with no sentence of 3+ words returns `{ "count": 0, "claims": [] }`.
+
+## Event day (Nov 14)
+
+28. **Adobe PDF Embed highlights.** `receipt.highlight` is `{ page, pageWidth, pageHeight, quadPoints, boundingBox }` in PDF points (origin bottom-left; quadPoints per line in Adobe's order: upper-left, upper-right, lower-left, lower-right), or `null`. `/api/check` adds `adobeDocId` (stable, from the PDF bytes; pass as `metaData.id` to `previewFile`) and `adobeAnnotations` (ready-made highlight annotations in Adobe's schema, coloured green / red / yellow by verdict). Boxes come from the PDF's own text layer (via unpdf), not from NDI's polygons, so they line up whichever reader found the receipt. Short quotes ("$12,500") are found through their surrounding source line, so a text source's one-page numbering can't misplace them. ALL-CAPS heading lines are left out of a box when the quote also covers clause lines. Letter positions use Helvetica widths. A `sampleId` with a PDF gets highlights on that PDF; plain text sources get `null` / `[]`.
+29. **NDI second pass with numbers removed.** Sentences NDI doesn't find are asked again with their numbers stripped (`method: "semantic-numbers-ignored"`), so a contradicted sentence ("runs for five years") still gets the clause it contradicts ("three (3)"). Live on msa-summary: both planted number errors now point at §2.1 and §3.1.
+30. **A sentence judged correct always shows evidence:** if the perceiver found no receipt for a `supported` sentence, the built-in matcher fills it in (`method: "lexical"`).
+
+### Using the highlights (front end)
+
+
+Every `/api/check` on a PDF (an upload, or a sample with a PDF) returns `adobeDocId` and `adobeAnnotations`. Each receipt's `highlight` holds its position on the page in PDF points.
+
+```js
+const view = adobeDCView.previewFile({ content: { location: { url: pdfUrl } }, metaData: { fileName: "msa.pdf", id: result.adobeDocId } }, { enableAnnotationAPIs: true });
+view.then((v) => v.getAnnotationManager()).then((m) => m.addAnnotations(result.adobeAnnotations));
+```

@@ -161,6 +161,21 @@ describe("NDI ground", () => {
     expect(g.receipts.s1.status).toBe("found");
   });
 
+  it("asks again with numbers removed when a sentence isn't found (a wrong number shouldn't hide the clause it contradicts)", async () => {
+    const { f, calls } = fakeNdi({
+      groundTargets: (ts) => ts.map((t) => (/\d/.test(t.text)
+        ? { id: t.id, status: "not_found", matches: [] }
+        : { id: t.id, status: "found", matches: [{ rank: 1, matched_text: PAGE2, match_method: "semantic", confidence: 0.7, location: { kind: "page_region", page: 2 } }] })),
+    });
+    const { ndi, doc } = await parsed(f);
+    const g = await ndi.ground(doc, extractClaims("Customer shall pay a monthly service fee of $18,500. The vendor ships free cupcakes."));
+    const grounds = calls.filter((c) => c.url.includes("/v1/documents/ground"));
+    expect(grounds).toHaveLength(2);
+    expect(grounds[1].body.targets).toEqual([{ id: "s1", text: "Customer shall pay a monthly service fee of", semantic: true }]); // only the sentence that had numbers
+    expect(g.receipts.s1).toMatchObject({ status: "found", page: 2, method: "semantic-numbers-ignored" });
+    expect(g.receipts.s2.status).toBe("found"); // no digits: found on the first pass in this fake
+  });
+
   it("uses the built-in matcher when NDI did not read the source", async () => {
     const ndi = createNdiPerceiver(cfg, fakeNdi().f);
     const doc = { name: "a.txt", format: "text", text: "Customer shall pay a monthly service fee.", pages: [{ page: 1, start: 0, end: 41 }], parsedBy: "local" };
