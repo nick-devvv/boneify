@@ -6,8 +6,8 @@ export async function textToPdf(pages: string[], opts: { title?: string; fontSiz
   if (opts.title) doc.setTitle(opts.title);
   doc.setCreationDate(new Date("2026-11-13T00:00:00Z"));
   doc.setModificationDate(new Date("2026-11-13T00:00:00Z"));
-  doc.setProducer("Rexceipts sample generator");
-  doc.setCreator("Rexceipts");
+  doc.setProducer("boneify sample generator");
+  doc.setCreator("boneify");
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const size = opts.fontSize ?? 10.5;
   const margin = 56;

@@ -168,7 +168,7 @@ export function adobeAnnotations(docId: string, claims: CheckedClaim[], now = ne
             type: "AdobeAnnoSelector",
           },
         },
-        creator: { type: "Person", name: "Rexceipts" },
+        creator: { type: "Person", name: "boneify" },
         created: now,
         modified: now,
       };

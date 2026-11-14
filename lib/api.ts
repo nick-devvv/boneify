@@ -28,7 +28,7 @@ export function errorJson(status: number, code: string, message: string): Respon
 export function errorResponse(err: unknown): Response {
   if (err instanceof ApiError) return errorJson(err.status, err.code, err.message);
   if (err instanceof ProviderError) return errorJson(502, "provider_error", err.message);
-  console.error("[receipts] unexpected error:", err instanceof Error ? `${err.name}: ${err.message}` : "non-error thrown");
+  console.error("[boneify] unexpected error:", err instanceof Error ? `${err.name}: ${err.message}` : "non-error thrown");
   return errorJson(500, "internal_error", "Something went wrong on our side. Try again.");
 }
 

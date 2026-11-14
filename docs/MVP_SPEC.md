@@ -1,10 +1,10 @@
-# Rexceipts — MVP Spec (Drexathon)
+# boneify — MVP Spec (Drexathon)
 
 Last updated: Nov 13, 2026
 
-## What Rexceipts is
+## What boneify is
 
-Rexceipts checks AI-written text against the document it came from, and gives every sentence a verdict plus a receipt. You upload the original (say, a contract) and paste the AI-written summary. In a few seconds each sentence turns green (backed up), red (contradicted) or yellow (not in the source, so probably made up), and links to the exact line in the original.
+boneify checks AI-written text against the document it came from, and gives every sentence a verdict plus a receipt. You upload the original (say, a contract) and paste the AI-written summary. In a few seconds each sentence turns green (backed up), red (contradicted) or yellow (not in the source, so probably made up), and links to the exact line in the original.
 
 - **Pitch:** "Spell-check for AI lies. Every AI claim gets a receipt."
 - **Track:** 1, Apex Predator (Drex vs. the Giants), which is judged on measured results.
@@ -105,7 +105,7 @@ The backend is a Next.js app with API routes only, written in TypeScript and dep
 - **No vendor SDKs.** Drex, NDI and the LLM are called with plain `fetch`, so every request is visible and easy to debug.
 
 ```text
-rexceipts/
+boneify/
 ├── app/api/
 │   ├── health/route.ts            GET   which engines are ready
 │   ├── check/route.ts             POST  check a document (the main feature)
@@ -845,7 +845,7 @@ The biggest risk is Drex scoring lower than the LLM on accuracy. Even then the r
 
 The repo's `README.md` follows this outline, written so a non-engineer can run it. Each heading stays short, and commands get copy-paste blocks.
 
-1. **Rexceipts:** the one-line pitch and a three-line explanation (what goes in, what comes out).
+1. **boneify:** the one-line pitch and a three-line explanation (what goes in, what comes out).
 2. **Quick start:** install Node 22, then:
 
 ```bash

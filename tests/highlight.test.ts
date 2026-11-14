@@ -56,7 +56,7 @@ describe("Adobe annotations", () => {
       "@context": ["https://www.w3.org/ns/anno.jsonld", "https://comments.acrobat.com/ns/anno.jsonld"],
       type: "Annotation", motivation: "commenting", bodyValue: "Wrong (97%): The fee is $18,500.",
       target: { source: id, selector: { type: "AdobeAnnoSelector", subtype: "highlight", node: { index: 1 }, quadPoints: h.quadPoints, boundingBox: h.boundingBox, strokeColor: VERDICT_COLOR.contradicted } },
-      creator: { type: "Person", name: "Rexceipts" }, created: "2026-11-14T00:00:00Z",
+      creator: { type: "Person", name: "boneify" }, created: "2026-11-14T00:00:00Z",
     });
   });
 });
