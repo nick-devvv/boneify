@@ -1,6 +1,6 @@
 # Boneify
 
-**Fossil or fiction?** Boneify checks every sentence an AI writes against the original document, and shows the page and clause that proves it. Built at Drexathon with Nace Drex, NDI, Intern and Adobe.
+**Fossil or fiction?** Boneify checks every sentence an AI writes against the original document, and shows the page and clause that proves it. Built at Drexathon with Nace Drex, NDI, Intern, Adobe and DeepInfra.
 
 Each sentence of an AI summary gets one verdict: **Correct**, **Wrong** or **Made up**, with how sure Drex is, a "needs review" flag when it isn't, and a receipt: the page, the clause number and the quote from the original, highlighted in the real PDF.
 
@@ -20,6 +20,7 @@ Same 450 RAGTruth test answers (3,041 sentences, graded against the human answer
 1. **NDI reads it.** Any PDF, Word file or scan, page by page.
 2. **Drex checks it.** Every sentence at once: correct, wrong or made up.
 3. **You get the receipt.** The page and clause for each sentence, highlighted in the PDF with the Adobe PDF Embed API.
+4. **Fix with Intern.** Intern (Nace's agent harness, Drex as System 1, a DeepInfra model as System 2) rewrites only the flagged sentences from their receipts, and Boneify checks the rewrite again. NDI also pulls out the document's key facts, each with its citation.
 
 ## The site
 

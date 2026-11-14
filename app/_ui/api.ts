@@ -2,6 +2,9 @@
 // NEXT_PUBLIC_API_BASE lets the front end call an API hosted elsewhere; empty means same origin.
 
 import type { CheckResult } from "../../lib/types";
+import type { FixResult } from "../../lib/fix/fix";
+
+export type { FixResult };
 
 const BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/$/, "");
 
@@ -14,6 +17,7 @@ export interface Health {
   defaults: { decider: string; perceiver: string; reviewThreshold: number };
   deciders: Array<{ id: string; label: string; model?: string; ready: boolean }>;
   perceivers: Array<{ id: string; label: string; ready: boolean }>;
+  intern?: { label: string; system1?: string; system2?: string; ready: boolean; note?: string };
 }
 export interface Headline {
   sentenceF1: number | null; sentencePrecision: number | null; sentenceRecall: number | null; responseF1: number | null;
@@ -71,19 +75,23 @@ export type CheckInput =
   | { kind: "text"; sourceText: string; sourceName: string; aiText: string; compare?: string }
   | { kind: "file"; file: File; aiText: string; compare?: string };
 
-export function check(input: CheckInput): Promise<CheckResult> {
+function post<T>(path: string, input: CheckInput): Promise<T> {
   if (input.kind === "file") {
     const form = new FormData();
     form.append("file", input.file);
     form.append("aiText", input.aiText);
     if (input.compare) form.append("compare", input.compare);
-    return call<CheckResult>("/api/check", { method: "POST", body: form });
+    return call<T>(path, { method: "POST", body: form });
   }
   const body = input.kind === "sample"
     ? { sampleId: input.sampleId, ...(input.aiText ? { aiText: input.aiText } : {}), ...(input.compare ? { compare: input.compare } : {}) }
     : { sourceText: input.sourceText, sourceName: input.sourceName, aiText: input.aiText, ...(input.compare ? { compare: input.compare } : {}) };
-  return call<CheckResult>("/api/check", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  return call<T>(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 }
+
+export const check = (input: CheckInput) => post<CheckResult>("/api/check", input);
+/** Fix with Intern: check, Intern rewrites the flagged sentences from their receipts, check again (about 30–40 s). */
+export const fix = (input: CheckInput) => post<FixResult>("/api/fix", { ...input, compare: undefined });
 
 /** Pick the Drex run and the big-AI baseline from the scoreboard rows, matching how the API's `improvement` picks them. */
 export function pickRuns(list: BenchmarkList | null): { drex: RunRow | null; baseline: RunRow | null; rules: RunRow | null } {

@@ -244,7 +244,7 @@ export function LiveDemo() {
 
           <div className="fade" aria-label="Who did what" style={{ background: "var(--ink)", color: "var(--paper)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12, opacity: id === "who" ? 1 : 0, transform: id === "who" ? "none" : "translateY(10px)" }}>
             <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: "7px 12px", alignItems: "center", fontSize: 13.5 }}>
-              <span><b>{data.engines.perceiver === "ndi" ? "NDI" : "Reader"}</b> read {pages} pages</span>
+              <span><b>{data.engines.perceiver === "ndi" ? "NDI" : "Reader"}</b> read {data.source.pages > 1 ? `${pages} pages` : "the contract"}</span>
               <span className="mono" style={{ fontSize: 12 }}>{fmtMs(data.timings.parseMs + data.timings.groundMs)}</span>
               <span><b>{deciderName(data.engines.decider)}</b> checked {n}</span>
               <span className="mono" style={{ fontSize: 12, color: "var(--amber)" }}>{fmtMs(data.timings.decideMs)} · {fmtUsd(data.usage.decide?.costUsd ?? 0)}</span>

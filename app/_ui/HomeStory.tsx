@@ -336,7 +336,7 @@ export function HomeStory() {
       </section>
 
       <footer style={{ maxWidth: 1280, margin: "0 auto", padding: "60px 40px 48px 40px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14, color: "var(--muted)" }}>
-        <span>Built at Drexathon with Nace Drex, NDI, Intern and Adobe. Sample companies are fictional.</span>
+        <span>Built at Drexathon with Nace Drex, NDI, Intern, Adobe and DeepInfra. Sample companies are fictional.</span>
         <Link href="/scoreboard">Scoreboard</Link>
       </footer>
     </div>

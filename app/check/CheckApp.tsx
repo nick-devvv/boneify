@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CheckResult, CheckedClaim } from "../../lib/types";
-import { ApiFailure, check, getHealth, getSample, getSamples, split, type Health, type SampleFull, type SampleInfo } from "../_ui/api";
+import { ApiFailure, check, fix, getHealth, getSample, getSamples, split, type CheckInput, type FixResult, type Health, type SampleFull, type SampleInfo } from "../_ui/api";
 import { Header } from "../_ui/Header";
 import { Key } from "../_ui/Key";
 import { REX, REX_HAPPY, REX_SIDE } from "../_ui/pixel";
@@ -60,6 +60,10 @@ export function CheckApp() {
   const timers = useRef<number[]>([]);
 
   const [sel, setSel] = useState<string | null>(null);
+  const [fixing, setFixing] = useState(false);
+  const [fixRes, setFixRes] = useState<FixResult | null>(null);
+  const [fixErr, setFixErr] = useState<string | null>(null);
+  const lastInput = useRef<CheckInput | null>(null);
 
   // samples and engine status on load
   useEffect(() => {
@@ -127,6 +131,8 @@ export function CheckApp() {
     setSlam(false);
     setFlood(false);
     setDropped(false);
+    setFixRes(null);
+    setFixErr(null);
     setStage("digging");
     window.scrollTo({ top: 0 });
     at(30, () => setFlood(true));
@@ -136,8 +142,9 @@ export function CheckApp() {
     let res: CheckResult | null = null;
     let usedOffline = false;
     try {
-      if (file) res = await check({ kind: "file", file, aiText, compare });
-      else if (sample) res = await check({ kind: "sample", sampleId: sample.id, aiText: aiText === sample.aiText ? undefined : aiText, compare });
+      const input: CheckInput | null = file ? { kind: "file", file, aiText, compare } : sample ? { kind: "sample", sampleId: sample.id, aiText: aiText === sample.aiText ? undefined : aiText, compare } : null;
+      lastInput.current = input;
+      if (input) res = await check(input);
     } catch (e) {
       const f = e as ApiFailure;
       // The venue Wi-Fi fallback: the recorded contract check, clearly labelled.
@@ -166,7 +173,13 @@ export function CheckApp() {
     return () => window.removeEventListener("keydown", onKey);
   }, [stage, skip]);
 
-  const restart = () => { clearTimers(); setStage("input"); setResult(null); setRunError(null); };
+  const restart = () => { clearTimers(); setStage("input"); setResult(null); setRunError(null); setFixRes(null); setFixErr(null); };
+  const runFix = () => {
+    if (!lastInput.current || fixing) return;
+    setFixing(true);
+    setFixErr(null);
+    fix(lastInput.current).then(setFixRes).catch((e: ApiFailure) => setFixErr(e.message || "Intern couldn’t fix it.")).finally(() => setFixing(false));
+  };
 
   return (
     <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden" }}>
@@ -180,6 +193,7 @@ export function CheckApp() {
       {stage === "results" && result ? (
         <ResultsView
           result={result} offline={offline} originalText={sample?.sourceText ?? fileText} sel={sel} onSel={setSel} onRestart={restart}
+          internReady={Boolean(health?.intern?.ready)} fixing={fixing} fixRes={fixRes} fixErr={fixErr} onFix={runFix}
           pdf={sample?.pdfUrl ? { url: sample.pdfUrl } : file && /\.pdf$/i.test(file.name) ? { file } : null}
         />
       ) : null}
@@ -396,8 +410,9 @@ function DigOverlay({ flood, dropped, dug, slam, result, error, sourceName, read
 
 /* ---------- 3 · results with proof ---------- */
 
-function ResultsView({ result, offline, originalText, pdf, sel, onSel, onRestart }: {
+function ResultsView({ result, offline, originalText, pdf, sel, onSel, onRestart, internReady, fixing, fixRes, fixErr, onFix }: {
   result: CheckResult; offline: boolean; originalText: string | null; pdf: { url: string } | { file: File } | null; sel: string | null; onSel: (id: string) => void; onRestart: () => void;
+  internReady: boolean; fixing: boolean; fixRes: FixResult | null; fixErr: string | null; onFix: () => void;
 }) {
   const s = result.summary;
   const problems = s.contradicted + s.not_in_source;
@@ -427,6 +442,13 @@ function ResultsView({ result, offline, originalText, pdf, sel, onSel, onRestart
     });
   }, [originalText, result, sel]);
   const looksLikeContract = Boolean(doc && doc.pages.flat().some((b) => b.t === "clause"));
+  const facts = (result.keyFacts ?? []).filter((k) => k.status === "found" && k.value);
+  const pageOfSection = (sec: string | null) => {
+    if (!doc || !sec) return null;
+    const i = doc.pages.findIndex((bl) => bl.some((b) => b.t === "clause" && b.key === sec.replace(/^§/, "")));
+    return i >= 0 ? i + 1 : null;
+  };
+  const [copied, setCopied] = useState(false);
 
   function exportReceipt() {
     const lines = [
@@ -470,9 +492,15 @@ function ResultsView({ result, offline, originalText, pdf, sel, onSel, onRestart
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="M7 10l5 5 5-5" /><path d="M5 21h14" /></svg>
             Download receipt
           </button>
+          {internReady && problems > 0 && !offline ? (
+            <button type="button" className="btn-next press keep" onClick={onFix} disabled={fixing} style={{ opacity: fixing ? 0.7 : 1 }}>
+              {fixing ? `Intern is fixing ${problems} ${problems === 1 ? "sentence" : "sentences"}…` : "Fix with Intern"}
+            </button>
+          ) : null}
           <button type="button" className="btn-dark press" onClick={onRestart}>Check another</button>
         </div>
       </div>
+      {fixErr ? <p className="mono" style={{ margin: "10px 0 0 0", fontSize: 13, color: "var(--red)" }}>{fixErr}</p> : null}
 
       <div aria-label="Who did what" style={{ marginTop: 20, background: "var(--ink)", color: "var(--paper)", borderRadius: 18, padding: "14px 22px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 30, fontSize: 15 }}>
         <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -493,6 +521,32 @@ function ResultsView({ result, offline, originalText, pdf, sel, onSel, onRestart
           </span>
         ) : null}
       </div>
+
+      {fixRes ? (
+        <section aria-label="Fixed by Intern" className="rise" style={{ marginTop: 16, background: "var(--sheet)", borderRadius: 18, boxShadow: "inset 0 0 0 2px var(--amber)", padding: "18px 22px", display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap" }}>
+            <span className="serif" style={{ fontSize: 34, lineHeight: 1 }}>Intern fixed it.</span>
+            <span className="mono" style={{ fontSize: 14 }}>
+              <span style={{ color: "var(--red)" }}>{fixRes.before.summary.supported} of {fixRes.before.summary.total} correct</span> → <span style={{ color: "var(--amber-text)", fontWeight: 600 }}>{fixRes.after.summary.supported} of {fixRes.after.summary.total} correct</span>
+            </span>
+            <span className="mono" style={{ marginLeft: "auto", fontSize: 12, color: "var(--muted)" }}>
+              Intern · System 1 {fixRes.intern.system1 ?? "Drex"} ({fixRes.intern.system1Asks} decisions) · System 2 {fixRes.intern.system2} · {fmtMs(fixRes.timings.totalMs)}
+            </span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {fixRes.changes.map((ch) => (
+              <div key={ch.claimId} style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 24px minmax(0, 1fr)", gap: 12, alignItems: "baseline" }}>
+                <span className="serif" style={{ fontSize: 19, color: "var(--red)", textDecoration: "line-through", textDecorationThickness: 2 }}>{ch.before}</span>
+                <span aria-hidden="true" style={{ color: "var(--muted)" }}>→</span>
+                <span className="serif" style={{ fontSize: 19 }}>{ch.after ?? <span style={{ color: "var(--muted)" }}>removed: the original never says this</span>}{ch.evidence ? <span className="mono" style={{ marginLeft: 8, fontSize: 11.5, color: "var(--amber-text)" }}>from “{ch.evidence.length > 40 ? `${ch.evidence.slice(0, 39)}…` : ch.evidence}”</span> : null}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" className="btn-light press" onClick={() => { navigator.clipboard?.writeText(fixRes.fixedText).then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 1500); }).catch(() => {}); }}>{copied ? "Copied" : "Copy the fixed text"}</button>
+          </div>
+        </section>
+      ) : null}
 
       <div style={{ display: "flex", gap: 28, marginTop: 20, alignItems: "flex-start" }}>
         <section aria-label="The original" style={{ flex: "1 1 0", minWidth: 0, position: "sticky", top: 16, background: "#E7DECF", borderRadius: 18, padding: "12px 14px 14px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -521,6 +575,24 @@ function ResultsView({ result, offline, originalText, pdf, sel, onSel, onRestart
         </section>
 
         <section aria-label="Sentences" style={{ flex: "1 1 0", minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+          {facts.length ? (
+            <div aria-label="Key facts" style={{ marginBottom: 12, background: "var(--sheet)", borderRadius: 16, boxShadow: "inset 0 0 0 1px var(--line)", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+              <span className="mono" style={{ fontSize: 12, color: "var(--muted)" }}>{result.documentType?.label ? `${result.documentType.label.toUpperCase()} · ` : ""}KEY FACTS NDI FOUND, EACH WITH ITS SOURCE</span>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "8px 18px" }}>
+                {facts.slice(0, 8).map((k) => {
+                  const pg = pageOfSection(k.section) ?? k.page;
+                  return (
+                    <button key={k.field} type="button" onClick={() => { if (pg) setPage(pg); }} title={k.quote ?? undefined}
+                      style={{ border: 0, background: "none", padding: 0, textAlign: "left", cursor: pg ? "pointer" : "default", color: "var(--ink)", display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
+                      <span className="mono" style={{ fontSize: 11, color: "var(--muted)" }}>{k.label}</span>
+                      <span className="serif" style={{ fontSize: 18, lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{k.value}</span>
+                      <span className="mono" style={{ fontSize: 10.5, color: "var(--amber-text)" }}>{[k.section ? `§${k.section.replace(/^§/, "")}` : null, k.page ? `page ${k.page}` : null].filter(Boolean).join(" · ") || "cited"}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
           {result.claims.map((c, i) => {
             const open = c.id === sel;
             const label = c.verdict === "supported" ? `CORRECT${where(c.receipt) ? ` · ${where(c.receipt)}` : ""}` : c.verdict === "contradicted" ? `WRONG${where(c.receipt) ? ` · ${where(c.receipt)}` : ""}` : "MADE UP";
