@@ -55,6 +55,30 @@
       }
     },
     {
+      "run": "llm-gpt-6.1-sol",
+      "label": "GPT-6.1 Sol",
+      "decider": "llm",
+      "model": "gpt-6.1-sol",
+      "createdAt": "2026-11-14T19:38:26.590Z",
+      "dataset": {
+        "name": "RAGTruth",
+        "split": "test",
+        "examples": 450,
+        "sentences": 3041
+      },
+      "headline": {
+        "sentenceF1": 0.5098,
+        "sentencePrecision": 0.3514,
+        "sentenceRecall": 0.9286,
+        "responseF1": 0.7119,
+        "threeWayAccuracy": 0.8392,
+        "p50LatencyMs": 4075,
+        "meanLatencyMs": 4146,
+        "costPerThousandSentencesUsd": 0.654222,
+        "totalCostUsd": 1.989488
+      }
+    },
+    {
       "run": "local",
       "label": "Simple rules (offline)",
       "decider": "local",
@@ -79,5 +103,13 @@
       }
     }
   ],
-  "improvement": null
+  "improvement": {
+    "drex": "drex",
+    "baseline": "llm-gpt-6.1-sol",
+    "speedup": 12.8549,
+    "costRatio": 0.0223,
+    "f1Delta": 0.0517,
+    "precisionDelta": 0.0546,
+    "recallDelta": -0.0188
+  }
 }
