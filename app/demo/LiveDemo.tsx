@@ -3,13 +3,12 @@
 // The demo: exactly what Try it does, played once in five steps with arrows and captions.
 // 1 the AI's summary → 2 split, NDI reads the PDF, Drex checks every sentence → 3 the wrong ones, each with its clause
 // lit on its page → 4 the made-up one → 5 who did what, and the race against the big AI model.
-// It replays the recorded check (data/demo/recorded-check.json). When Drex and NDI are switched on, it runs the same
-// check live in the background and uses that instead, as long as the answer arrives before the verdicts land.
+// It replays the recorded check (data/demo/recorded-check.json): a real Drex + NDI run, saved. The demo never calls the
+// backend, so opening it costs nothing; only "Try it" (/check) runs live checks.
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CheckResult, CheckedClaim } from "../../lib/types";
-import { check, getHealth } from "../_ui/api";
 import { ContractPage, blockFor, marksFor, parseContract } from "../_ui/Contract";
 import { Header } from "../_ui/Header";
 import { Key } from "../_ui/Key";
@@ -78,20 +77,6 @@ export function LiveDemo() {
   const cur = steps[Math.min(step, last) - 1];
   const at = done || reduce ? SUBS[step - 1] : sub;
 
-  // try the real engines in the background
-  useEffect(() => {
-    let dead = false;
-    getHealth().then((h) => {
-      const drex = h.deciders.find((d) => d.id === "drex")?.ready;
-      const ndi = h.perceivers.find((p) => p.id === "ndi")?.ready;
-      const llm = h.deciders.find((d) => d.id === "llm")?.ready;
-      if (!drex || !ndi) return;
-      return check({ kind: "sample", sampleId: RECORDED_SOURCE.id, compare: llm ? "llm" : undefined }).then((r) => {
-        if (!dead && !decidedRef.current) { setData(r); setLive(true); }
-      });
-    }).catch(() => {});
-    return () => { dead = true; };
-  }, []);
 
   // every 1.1 s: the current step's next small move; autoplay holds two ticks, moves on, and stops after the last step
   useEffect(() => {
