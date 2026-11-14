@@ -42,6 +42,13 @@ describe("mock Nace server: the real Drex + NDI code end to end", () => {
     const fee = r.claims.find((c) => c.text.includes("$18,500"))!;
     expect(fee.verdict).not.toBe("supported");
     expect(fee.receipt).toMatchObject({ status: "found", page: 2 });
+    // NDI classify + extract ride along
+    expect(r.documentType?.id).toBe("contract");
+    expect(r.usage.profile?.requests).toBe(2);
+    const facts = r.keyFacts.filter((k) => k.status === "found");
+    expect(facts.length).toBeGreaterThan(0);
+    for (const k of facts) expect(k.quote && k.page).toBeTruthy();
+    expect(facts.some((k) => k.highlight)).toBe(true);
   });
 
   it("checks a text source (NDI upload as .txt) with text_span receipts", async () => {

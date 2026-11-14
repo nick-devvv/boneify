@@ -12,6 +12,8 @@ describe("checkDocument (offline engines)", () => {
     const r = await checkDocument({ source: { kind: "text", text: s.sourceText, name: s.sourceName }, aiText: s.aiText, context: s.context }, offline);
 
     expect(r.engines).toEqual({ decider: "local", deciderModel: "rules-v1", perceiver: "local" });
+    expect(r.documentType).toBeNull(); // classify + extract are NDI-only
+    expect(r.keyFacts).toEqual([]);
     expect(r.claims).toHaveLength(10);
     for (const c of r.claims) {
       expect(["supported", "contradicted", "not_in_source"]).toContain(c.verdict);
