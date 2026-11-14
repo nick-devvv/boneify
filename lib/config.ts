@@ -43,6 +43,14 @@ function str(env: Env, key: string, fallback: string): string {
   return v === undefined || v.trim() === "" ? fallback : v.trim();
 }
 
+/** A key pasted with extra lines or a "NAME=" prefix still works: keep only the first token, minus any NAME= part. */
+function secret(env: Env, key: string, fallback: string): string {
+  const v = str(env, key, "");
+  if (!v) return fallback;
+  const first = v.split(/\s+/)[0];
+  return first.replace(/^[A-Z][A-Z0-9_]*=/, "") || fallback;
+}
+
 function num(env: Env, key: string, fallback: number, min?: number, max?: number): number {
   const raw = env[key];
   if (raw === undefined || raw.trim() === "") return fallback;
@@ -61,14 +69,14 @@ export function getConfig(env: Env = process.env): Config {
     perceiver: str(env, "PERCEIVER", "local").toLowerCase(),
     reviewThreshold: num(env, "REVIEW_THRESHOLD", 0.6, 0, 1),
 
-    naceApiKey: str(env, "NACE_API_KEY", ""),
+    naceApiKey: secret(env, "NACE_API_KEY", ""),
     naceBaseUrl: str(env, "NACE_BASE_URL", "https://console.nace.ai").replace(/\/+$/, "").replace(/\/v1$/, ""),
     drexModel: str(env, "DREX_MODEL", "drex-latest"),
     drexPricePerMtok: num(env, "DREX_PRICE_PER_MTOK", 0.06, 0),
     drexBatchSize: Math.round(num(env, "DREX_BATCH_SIZE", 256, 1, 512)),
     ndiWaitSeconds: Math.round(num(env, "NDI_WAIT_SECONDS", 60, 1, 100)),
 
-    llmApiKey: str(env, "LLM_API_KEY", str(env, "OPENAI_API_KEY", "")),
+    llmApiKey: secret(env, "LLM_API_KEY", secret(env, "OPENAI_API_KEY", "")),
     llmBaseUrl: str(env, "LLM_BASE_URL", "https://api.openai.com/v1").replace(/\/+$/, ""),
     llmModel: str(env, "LLM_MODEL", "gpt-4o-mini"),
     llmLabel: str(env, "LLM_LABEL", "Frontier LLM"),
