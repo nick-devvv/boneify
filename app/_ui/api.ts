@@ -46,6 +46,32 @@ export class ApiFailure extends Error {
   constructor(public status: number, public code: string, message: string, public network = false) { super(message); }
 }
 
+// What people see when something fails. Written here, never copied from the
+// server, so a provider's raw error (or anything secret inside it) can't reach the page.
+const PLAIN: Record<string, string> = {
+  network: "Can’t reach Boneify right now. Check your connection and try again.",
+  provider_error: "Drex or NDI didn’t answer. Try again in a minute.",
+  provider_timeout: "Drex or NDI took too long. Try again in a minute.",
+  internal_error: "Something broke on our side. Try again in a minute.",
+  too_large: "That file is too big. Try one under 20 MB.",
+  unsupported_file_type: "That file type isn’t supported. Try a PDF, Word file, image or text.",
+  unreadable_file: "We couldn’t read that file. Try a different copy of it.",
+  empty_source: "The original looks empty. Try a different file.",
+  missing_source: "Add the original first.",
+  two_sources: "Pick one original: a sample or your file.",
+  missing_ai_text: "Paste what the AI wrote.",
+  no_sentences: "We couldn’t find any sentences in what the AI wrote.",
+  sample_not_found: "That sample is gone. Pick another one.",
+  intern_unavailable: "Fix with Intern only runs where the Intern app is installed.",
+  intern_failed: "Intern couldn’t fix it this time.",
+};
+
+export function friendlyError(e: unknown): { text: string; code: string } {
+  const f = e instanceof ApiFailure ? e : null;
+  const code = f?.code || "error";
+  return { text: PLAIN[code] ?? "Something went wrong. Try again.", code };
+}
+
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
