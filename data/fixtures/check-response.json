@@ -1,6 +1,6 @@
 {
-  "id": "17ecc514-5a96-4095-b4be-0fd049bfef3b",
-  "createdAt": "2026-11-14T08:52:51.197Z",
+  "id": "7a0786ff-1a05-43a3-9f7d-58d13528c125",
+  "createdAt": "2026-11-14T19:15:13.250Z",
   "engines": {
     "decider": "local",
     "deciderModel": "rules-v1",
@@ -35,7 +35,44 @@
         "charEnd": 283,
         "method": "lexical",
         "score": 0.923,
-        "section": null
+        "section": null,
+        "highlight": {
+          "page": 1,
+          "pageWidth": 612,
+          "pageHeight": 792,
+          "quadPoints": [
+            56,
+            721.09,
+            527.04,
+            721.09,
+            56,
+            709.33,
+            527.04,
+            709.33,
+            56,
+            705.87,
+            553.85,
+            705.87,
+            56,
+            694.11,
+            553.85,
+            694.11,
+            56,
+            690.64,
+            284.62,
+            690.64,
+            56,
+            678.88,
+            284.62,
+            678.88
+          ],
+          "boundingBox": [
+            56,
+            678.88,
+            553.85,
+            721.09
+          ]
+        }
       }
     },
     {
@@ -60,7 +97,36 @@
         "charEnd": 462,
         "method": "lexical",
         "score": 0.818,
-        "section": "1.1"
+        "section": "1.1",
+        "highlight": {
+          "page": 1,
+          "pageWidth": 612,
+          "pageHeight": 792,
+          "quadPoints": [
+            56,
+            651.05,
+            536.87,
+            651.05,
+            56,
+            639.29,
+            536.87,
+            639.29,
+            56,
+            635.83,
+            343.12,
+            635.83,
+            56,
+            624.07,
+            343.12,
+            624.07
+          ],
+          "boundingBox": [
+            56,
+            624.07,
+            536.87,
+            651.05
+          ]
+        }
       }
     },
     {
@@ -85,7 +151,36 @@
         "charEnd": 627,
         "method": "lexical",
         "score": 1,
-        "section": "1.2"
+        "section": "1.2",
+        "highlight": {
+          "page": 1,
+          "pageWidth": 612,
+          "pageHeight": 792,
+          "quadPoints": [
+            56,
+            620.6,
+            529.31,
+            620.6,
+            56,
+            608.84,
+            529.31,
+            608.84,
+            56,
+            605.38,
+            369.42,
+            605.38,
+            56,
+            593.62,
+            369.42,
+            593.62
+          ],
+          "boundingBox": [
+            56,
+            593.62,
+            529.31,
+            620.6
+          ]
+        }
       }
     },
     {
@@ -110,7 +205,28 @@
         "charEnd": 1652,
         "method": "lexical",
         "score": 0.667,
-        "section": "4.2"
+        "section": "4.2",
+        "highlight": {
+          "page": 2,
+          "pageWidth": 612,
+          "pageHeight": 792,
+          "quadPoints": [
+            56,
+            584.06,
+            404.4,
+            584.06,
+            56,
+            572.3,
+            404.4,
+            572.3
+          ],
+          "boundingBox": [
+            56,
+            572.3,
+            404.4,
+            584.06
+          ]
+        }
       }
     },
     {
@@ -135,7 +251,44 @@
         "charEnd": 965,
         "method": "lexical",
         "score": 1,
-        "section": "2.2"
+        "section": "2.2",
+        "highlight": {
+          "page": 1,
+          "pageWidth": 612,
+          "pageHeight": 792,
+          "quadPoints": [
+            56,
+            550.57,
+            554.35,
+            550.57,
+            56,
+            538.81,
+            554.35,
+            538.81,
+            56,
+            535.34,
+            520.56,
+            535.34,
+            56,
+            523.58,
+            520.56,
+            523.58,
+            56,
+            520.12,
+            139.44,
+            520.12,
+            56,
+            508.36,
+            139.44,
+            508.36
+          ],
+          "boundingBox": [
+            56,
+            508.36,
+            554.35,
+            550.57
+          ]
+        }
       }
     },
     {
@@ -160,7 +313,28 @@
         "charEnd": 1058,
         "method": "lexical",
         "score": 0.667,
-        "section": "3.1"
+        "section": "3.1",
+        "highlight": {
+          "page": 2,
+          "pageWidth": 612,
+          "pageHeight": 792,
+          "quadPoints": [
+            56,
+            730.23,
+            392.15,
+            730.23,
+            56,
+            718.47,
+            392.15,
+            718.47
+          ],
+          "boundingBox": [
+            56,
+            718.47,
+            392.15,
+            730.23
+          ]
+        }
       }
     },
     {
@@ -185,7 +359,28 @@
         "charEnd": 1268,
         "method": "lexical",
         "score": 0.625,
-        "section": "3.3"
+        "section": "3.3",
+        "highlight": {
+          "page": 2,
+          "pageWidth": 612,
+          "pageHeight": 792,
+          "quadPoints": [
+            56,
+            684.55,
+            483.81,
+            684.55,
+            56,
+            672.79,
+            483.81,
+            672.79
+          ],
+          "boundingBox": [
+            56,
+            672.79,
+            483.81,
+            684.55
+          ]
+        }
       }
     },
     {
@@ -210,7 +405,36 @@
         "charEnd": 1987,
         "method": "lexical",
         "score": 0.833,
-        "section": "6.1"
+        "section": "6.1",
+        "highlight": {
+          "page": 3,
+          "pageWidth": 612,
+          "pageHeight": 792,
+          "quadPoints": [
+            56,
+            730.23,
+            552.61,
+            730.23,
+            56,
+            718.47,
+            552.61,
+            718.47,
+            56,
+            715,
+            394.49,
+            715,
+            56,
+            703.24,
+            394.49,
+            703.24
+          ],
+          "boundingBox": [
+            56,
+            703.24,
+            552.61,
+            730.23
+          ]
+        }
       }
     },
     {
@@ -235,7 +459,36 @@
         "charEnd": 2360,
         "method": "lexical",
         "score": 0.857,
-        "section": "7.1"
+        "section": "7.1",
+        "highlight": {
+          "page": 3,
+          "pageWidth": 612,
+          "pageHeight": 792,
+          "quadPoints": [
+            56,
+            644.96,
+            545.9,
+            644.96,
+            56,
+            633.2,
+            545.9,
+            633.2,
+            56,
+            629.74,
+            361.79,
+            629.74,
+            56,
+            617.98,
+            361.79,
+            617.98
+          ],
+          "boundingBox": [
+            56,
+            617.98,
+            545.9,
+            644.96
+          ]
+        }
       }
     },
     {
@@ -260,7 +513,28 @@
         "charEnd": 2456,
         "method": "lexical",
         "score": 1,
-        "section": "8.1"
+        "section": "8.1",
+        "highlight": {
+          "page": 3,
+          "pageWidth": 612,
+          "pageHeight": 792,
+          "quadPoints": [
+            56,
+            590.15,
+            455.19,
+            590.15,
+            56,
+            578.39,
+            455.19,
+            578.39
+          ],
+          "boundingBox": [
+            56,
+            578.39,
+            455.19,
+            590.15
+          ]
+        }
       }
     }
   ],
@@ -276,7 +550,7 @@
     "parseMs": 0,
     "decideMs": 16,
     "groundMs": 3,
-    "totalMs": 18
+    "totalMs": 167
   },
   "usage": {
     "decide": {
@@ -286,5 +560,512 @@
       "costUsd": 0
     }
   },
-  "warnings": []
+  "warnings": [],
+  "adobeDocId": "c0a2d346-063e-5968-b51c-4b804cf4d113",
+  "adobeAnnotations": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/anno.jsonld",
+        "https://comments.acrobat.com/ns/anno.jsonld"
+      ],
+      "type": "Annotation",
+      "id": "c688c72b-47e3-5868-afd1-240073a5c1e3",
+      "bodyValue": "Correct (99%): This Master Services Agreement between Harbor Analytics LLC and Juniper Freight Co. took effect on March 1, 2026.",
+      "motivation": "commenting",
+      "target": {
+        "source": "c0a2d346-063e-5968-b51c-4b804cf4d113",
+        "selector": {
+          "node": {
+            "index": 0
+          },
+          "opacity": 0.35,
+          "subtype": "highlight",
+          "boundingBox": [
+            56,
+            678.88,
+            553.85,
+            721.09
+          ],
+          "quadPoints": [
+            56,
+            721.09,
+            527.04,
+            721.09,
+            56,
+            709.33,
+            527.04,
+            709.33,
+            56,
+            705.87,
+            553.85,
+            705.87,
+            56,
+            694.11,
+            553.85,
+            694.11,
+            56,
+            690.64,
+            284.62,
+            690.64,
+            56,
+            678.88,
+            284.62,
+            678.88
+          ],
+          "strokeColor": "#22C55E",
+          "type": "AdobeAnnoSelector"
+        }
+      },
+      "creator": {
+        "type": "Person",
+        "name": "Rexceipts"
+      },
+      "created": "2026-11-14T19:15:13.250Z",
+      "modified": "2026-11-14T19:15:13.250Z"
+    },
+    {
+      "@context": [
+        "https://www.w3.org/ns/anno.jsonld",
+        "https://comments.acrobat.com/ns/anno.jsonld"
+      ],
+      "type": "Annotation",
+      "id": "fd9aa648-b23c-59d6-ac0b-95dbaf472bc1",
+      "bodyValue": "Correct (98%): Harbor Analytics provides route-optimization analytics, a hosted reporting dashboard and quarterly planning workshops.",
+      "motivation": "commenting",
+      "target": {
+        "source": "c0a2d346-063e-5968-b51c-4b804cf4d113",
+        "selector": {
+          "node": {
+            "index": 0
+          },
+          "opacity": 0.35,
+          "subtype": "highlight",
+          "boundingBox": [
+            56,
+            624.07,
+            536.87,
+            651.05
+          ],
+          "quadPoints": [
+            56,
+            651.05,
+            536.87,
+            651.05,
+            56,
+            639.29,
+            536.87,
+            639.29,
+            56,
+            635.83,
+            343.12,
+            635.83,
+            56,
+            624.07,
+            343.12,
+            624.07
+          ],
+          "strokeColor": "#22C55E",
+          "type": "AdobeAnnoSelector"
+        }
+      },
+      "creator": {
+        "type": "Person",
+        "name": "Rexceipts"
+      },
+      "created": "2026-11-14T19:15:13.250Z",
+      "modified": "2026-11-14T19:15:13.250Z"
+    },
+    {
+      "@context": [
+        "https://www.w3.org/ns/anno.jsonld",
+        "https://comments.acrobat.com/ns/anno.jsonld"
+      ],
+      "type": "Annotation",
+      "id": "c2bc990c-0880-53f3-b38c-4342a6f66eca",
+      "bodyValue": "Correct (99%): The dashboard must be available at least 99.5% of each month, excluding announced maintenance.",
+      "motivation": "commenting",
+      "target": {
+        "source": "c0a2d346-063e-5968-b51c-4b804cf4d113",
+        "selector": {
+          "node": {
+            "index": 0
+          },
+          "opacity": 0.35,
+          "subtype": "highlight",
+          "boundingBox": [
+            56,
+            593.62,
+            529.31,
+            620.6
+          ],
+          "quadPoints": [
+            56,
+            620.6,
+            529.31,
+            620.6,
+            56,
+            608.84,
+            529.31,
+            608.84,
+            56,
+            605.38,
+            369.42,
+            605.38,
+            56,
+            593.62,
+            369.42,
+            593.62
+          ],
+          "strokeColor": "#22C55E",
+          "type": "AdobeAnnoSelector"
+        }
+      },
+      "creator": {
+        "type": "Person",
+        "name": "Rexceipts"
+      },
+      "created": "2026-11-14T19:15:13.250Z",
+      "modified": "2026-11-14T19:15:13.250Z"
+    },
+    {
+      "@context": [
+        "https://www.w3.org/ns/anno.jsonld",
+        "https://comments.acrobat.com/ns/anno.jsonld"
+      ],
+      "type": "Annotation",
+      "id": "7239c03b-5a13-5bf4-9a58-dec1a0bd16c4",
+      "bodyValue": "Wrong (59%): The agreement runs for five years.",
+      "motivation": "commenting",
+      "target": {
+        "source": "c0a2d346-063e-5968-b51c-4b804cf4d113",
+        "selector": {
+          "node": {
+            "index": 1
+          },
+          "opacity": 0.35,
+          "subtype": "highlight",
+          "boundingBox": [
+            56,
+            572.3,
+            404.4,
+            584.06
+          ],
+          "quadPoints": [
+            56,
+            584.06,
+            404.4,
+            584.06,
+            56,
+            572.3,
+            404.4,
+            572.3
+          ],
+          "strokeColor": "#EF4444",
+          "type": "AdobeAnnoSelector"
+        }
+      },
+      "creator": {
+        "type": "Person",
+        "name": "Rexceipts"
+      },
+      "created": "2026-11-14T19:15:13.250Z",
+      "modified": "2026-11-14T19:15:13.250Z"
+    },
+    {
+      "@context": [
+        "https://www.w3.org/ns/anno.jsonld",
+        "https://comments.acrobat.com/ns/anno.jsonld"
+      ],
+      "type": "Annotation",
+      "id": "6b02d8af-451b-5b8c-bf3e-bb23ec06e4d1",
+      "bodyValue": "Correct (99%): After that, it renews automatically for one-year periods unless either party gives 90 days' notice.",
+      "motivation": "commenting",
+      "target": {
+        "source": "c0a2d346-063e-5968-b51c-4b804cf4d113",
+        "selector": {
+          "node": {
+            "index": 0
+          },
+          "opacity": 0.35,
+          "subtype": "highlight",
+          "boundingBox": [
+            56,
+            508.36,
+            554.35,
+            550.57
+          ],
+          "quadPoints": [
+            56,
+            550.57,
+            554.35,
+            550.57,
+            56,
+            538.81,
+            554.35,
+            538.81,
+            56,
+            535.34,
+            520.56,
+            535.34,
+            56,
+            523.58,
+            520.56,
+            523.58,
+            56,
+            520.12,
+            139.44,
+            520.12,
+            56,
+            508.36,
+            139.44,
+            508.36
+          ],
+          "strokeColor": "#22C55E",
+          "type": "AdobeAnnoSelector"
+        }
+      },
+      "creator": {
+        "type": "Person",
+        "name": "Rexceipts"
+      },
+      "created": "2026-11-14T19:15:13.250Z",
+      "modified": "2026-11-14T19:15:13.250Z"
+    },
+    {
+      "@context": [
+        "https://www.w3.org/ns/anno.jsonld",
+        "https://comments.acrobat.com/ns/anno.jsonld"
+      ],
+      "type": "Annotation",
+      "id": "92513c36-2a62-5b35-ba15-9140cb8153be",
+      "bodyValue": "Wrong (70%): Juniper Freight pays a monthly service fee of $18,500.",
+      "motivation": "commenting",
+      "target": {
+        "source": "c0a2d346-063e-5968-b51c-4b804cf4d113",
+        "selector": {
+          "node": {
+            "index": 1
+          },
+          "opacity": 0.35,
+          "subtype": "highlight",
+          "boundingBox": [
+            56,
+            718.47,
+            392.15,
+            730.23
+          ],
+          "quadPoints": [
+            56,
+            730.23,
+            392.15,
+            730.23,
+            56,
+            718.47,
+            392.15,
+            718.47
+          ],
+          "strokeColor": "#EF4444",
+          "type": "AdobeAnnoSelector"
+        }
+      },
+      "creator": {
+        "type": "Person",
+        "name": "Rexceipts"
+      },
+      "created": "2026-11-14T19:15:13.250Z",
+      "modified": "2026-11-14T19:15:13.250Z"
+    },
+    {
+      "@context": [
+        "https://www.w3.org/ns/anno.jsonld",
+        "https://comments.acrobat.com/ns/anno.jsonld"
+      ],
+      "type": "Annotation",
+      "id": "15c81190-51d2-51b7-b5aa-2f1935d6ac55",
+      "bodyValue": "Correct (93%): Invoices are payable within 30 days, and late amounts accrue interest at 1% per month.",
+      "motivation": "commenting",
+      "target": {
+        "source": "c0a2d346-063e-5968-b51c-4b804cf4d113",
+        "selector": {
+          "node": {
+            "index": 1
+          },
+          "opacity": 0.35,
+          "subtype": "highlight",
+          "boundingBox": [
+            56,
+            672.79,
+            483.81,
+            684.55
+          ],
+          "quadPoints": [
+            56,
+            684.55,
+            483.81,
+            684.55,
+            56,
+            672.79,
+            483.81,
+            672.79
+          ],
+          "strokeColor": "#22C55E",
+          "type": "AdobeAnnoSelector"
+        }
+      },
+      "creator": {
+        "type": "Person",
+        "name": "Rexceipts"
+      },
+      "created": "2026-11-14T19:15:13.250Z",
+      "modified": "2026-11-14T19:15:13.250Z"
+    },
+    {
+      "@context": [
+        "https://www.w3.org/ns/anno.jsonld",
+        "https://comments.acrobat.com/ns/anno.jsonld"
+      ],
+      "type": "Annotation",
+      "id": "22abad46-b4a9-5388-9e38-87fe90edbf5b",
+      "bodyValue": "Wrong (55%): Either party may terminate for convenience on 30 days' notice.",
+      "motivation": "commenting",
+      "target": {
+        "source": "c0a2d346-063e-5968-b51c-4b804cf4d113",
+        "selector": {
+          "node": {
+            "index": 2
+          },
+          "opacity": 0.35,
+          "subtype": "highlight",
+          "boundingBox": [
+            56,
+            703.24,
+            552.61,
+            730.23
+          ],
+          "quadPoints": [
+            56,
+            730.23,
+            552.61,
+            730.23,
+            56,
+            718.47,
+            552.61,
+            718.47,
+            56,
+            715,
+            394.49,
+            715,
+            56,
+            703.24,
+            394.49,
+            703.24
+          ],
+          "strokeColor": "#EF4444",
+          "type": "AdobeAnnoSelector"
+        }
+      },
+      "creator": {
+        "type": "Person",
+        "name": "Rexceipts"
+      },
+      "created": "2026-11-14T19:15:13.250Z",
+      "modified": "2026-11-14T19:15:13.250Z"
+    },
+    {
+      "@context": [
+        "https://www.w3.org/ns/anno.jsonld",
+        "https://comments.acrobat.com/ns/anno.jsonld"
+      ],
+      "type": "Annotation",
+      "id": "a0a93b83-9646-5f7b-a2f0-5b6ef782bfec",
+      "bodyValue": "Correct (98%): Each party's liability is capped at the fees paid in the twelve months before the claim.",
+      "motivation": "commenting",
+      "target": {
+        "source": "c0a2d346-063e-5968-b51c-4b804cf4d113",
+        "selector": {
+          "node": {
+            "index": 2
+          },
+          "opacity": 0.35,
+          "subtype": "highlight",
+          "boundingBox": [
+            56,
+            617.98,
+            545.9,
+            644.96
+          ],
+          "quadPoints": [
+            56,
+            644.96,
+            545.9,
+            644.96,
+            56,
+            633.2,
+            545.9,
+            633.2,
+            56,
+            629.74,
+            361.79,
+            629.74,
+            56,
+            617.98,
+            361.79,
+            617.98
+          ],
+          "strokeColor": "#22C55E",
+          "type": "AdobeAnnoSelector"
+        }
+      },
+      "creator": {
+        "type": "Person",
+        "name": "Rexceipts"
+      },
+      "created": "2026-11-14T19:15:13.250Z",
+      "modified": "2026-11-14T19:15:13.250Z"
+    },
+    {
+      "@context": [
+        "https://www.w3.org/ns/anno.jsonld",
+        "https://comments.acrobat.com/ns/anno.jsonld"
+      ],
+      "type": "Annotation",
+      "id": "6cf752fd-3c0e-55e4-b55d-f785663094a0",
+      "bodyValue": "Correct (99%): The agreement is governed by Delaware law.",
+      "motivation": "commenting",
+      "target": {
+        "source": "c0a2d346-063e-5968-b51c-4b804cf4d113",
+        "selector": {
+          "node": {
+            "index": 2
+          },
+          "opacity": 0.35,
+          "subtype": "highlight",
+          "boundingBox": [
+            56,
+            578.39,
+            455.19,
+            590.15
+          ],
+          "quadPoints": [
+            56,
+            590.15,
+            455.19,
+            590.15,
+            56,
+            578.39,
+            455.19,
+            578.39
+          ],
+          "strokeColor": "#22C55E",
+          "type": "AdobeAnnoSelector"
+        }
+      },
+      "creator": {
+        "type": "Person",
+        "name": "Rexceipts"
+      },
+      "created": "2026-11-14T19:15:13.250Z",
+      "modified": "2026-11-14T19:15:13.250Z"
+    }
+  ]
 }

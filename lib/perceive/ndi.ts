@@ -18,6 +18,7 @@ import { ProviderError } from "../errors";
 import { requestJson } from "../http";
 import { lexicalReceipts, notFoundReceipt, parseLocal } from "./local";
 import { sectionFor } from "../text/section";
+import { contentWords, withoutNumbers } from "../text/similarity";
 
 const PROVIDER = "NDI";
 export const GROUND_BATCH = 30;
@@ -238,11 +239,10 @@ export function createNdiPerceiver(cfg: Config = getConfig(), fetchImpl?: typeof
       const failed: Claim[] = [];
       let useParseResult = Boolean(doc.ndi?.parseJobId);
 
-      for (let i = 0; i < claims.length; i += GROUND_BATCH) {
-        const batch = claims.slice(i, i + GROUND_BATCH);
+      const groundBatch = async (batch: Array<{ claim: Claim; text: string }>, loose: boolean) => {
         const body = (src: Record<string, string>) => ({
           source: src,
-          targets: batch.map((c) => ({ id: c.id, text: c.text, semantic: true })),
+          targets: batch.map((b) => ({ id: b.claim.id, text: b.text, semantic: true })),
           options: { max_matches: 1 },
         });
         let job: NdiJob<GroundResultBody>;
@@ -258,11 +258,12 @@ export function createNdiPerceiver(cfg: Config = getConfig(), fetchImpl?: typeof
           }
         }
         const targets = new Map((job.result?.targets ?? []).map((t) => [t.id, t]));
-        for (const c of batch) {
+        const missing: Claim[] = [];
+        for (const { claim: c } of batch) {
           const t = targets.get(c.id);
-          if (!t || t.status === "failed") { failed.push(c); continue; }
+          if (!t || t.status === "failed") { if (!loose) failed.push(c); continue; }
           const m = (t.matches ?? []).slice().sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99))[0];
-          if (t.status !== "found" || !m) { receipts[c.id] = notFoundReceipt("semantic"); continue; }
+          if (t.status !== "found" || !m) { if (!loose) { receipts[c.id] = notFoundReceipt("semantic"); missing.push(c); } continue; }
           const quote = String(m.matched_text ?? "");
           const where = locate(doc, quote, m.location);
           receipts[c.id] = {
@@ -271,13 +272,26 @@ export function createNdiPerceiver(cfg: Config = getConfig(), fetchImpl?: typeof
             quote: quote || null,
             charStart: where.start,
             charEnd: where.end,
-            method: m.match_method || "semantic",
+            method: loose ? "semantic-numbers-ignored" : m.match_method || "semantic",
             score: typeof m.confidence === "number" ? m.confidence : null,
             section: sectionFor(doc.text, where.start, where.end, quote || null),
             region: m.location ?? null,
           };
         }
+        return missing;
+      };
+
+      // Pass 1: the sentences as written.
+      const notFound: Claim[] = [];
+      for (let i = 0; i < claims.length; i += GROUND_BATCH) {
+        notFound.push(...(await groundBatch(claims.slice(i, i + GROUND_BATCH).map((c) => ({ claim: c, text: c.text })), false)));
       }
+      // Pass 2: a sentence with a wrong number ("runs for five years") doesn't match its clause ("three (3) years").
+      // Ask again with the numbers taken out, so a contradicted sentence still gets the clause it contradicts.
+      const loose = notFound
+        .map((c) => ({ claim: c, text: withoutNumbers(c.text).replace(/\s+/g, " ").trim() }))
+        .filter((b) => b.text !== b.claim.text.replace(/\s+/g, " ").trim() && contentWords(b.text).length >= 3);
+      for (let i = 0; i < loose.length; i += GROUND_BATCH) await groundBatch(loose.slice(i, i + GROUND_BATCH), true);
 
       if (failed.length) {
         Object.assign(receipts, lexicalReceipts(doc, failed));

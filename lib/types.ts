@@ -33,8 +33,12 @@ export interface Receipt {
   method: string;            // "lexical" | "exact" | "normalized" | "semantic"
   score: number | null;      // 0..1 when known
   section: string | null;    // clause number at the start of the matched paragraph ("2.1", "§3.2", "Article 4"), or null
+  highlight?: Highlight | null; // where the quote sits on the PDF page, for Adobe PDF Embed highlights; null when no PDF or not found
   region?: unknown;          // raw NDI location (page polygons etc.)
 }
+
+// PDF points, origin bottom-left (Adobe's annotation coordinates). quadPoints: per line, upper-left, upper-right, lower-left, lower-right.
+export interface Highlight { page: number; pageWidth: number; pageHeight: number; quadPoints: number[]; boundingBox: [number, number, number, number] }
 
 export interface DecideContext { task?: string; question?: string } // how the AI text was produced
 export interface Decision { claimId: string; verdict: Verdict; probabilities: Probabilities; confidence: number }
@@ -72,6 +76,8 @@ export interface CheckResult {
   usage: { decide: Usage; ground?: Usage };
   warnings: string[];        // e.g. "NDI could not locate 2 sentences; used the built-in matcher"
   comparison?: Comparison | null; // only when the request sent `compare`; null if that decider failed
+  adobeDocId: string | null;        // pass as metaData.id to the Adobe PDF Embed API's previewFile; null when the source isn't a PDF
+  adobeAnnotations: unknown[];      // ready-made Adobe highlight annotations, one per receipt with a box, coloured by verdict
 }
 
 // A second decider raced on the same parsed document and claims (POST /api/check with "compare").

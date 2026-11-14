@@ -26,3 +26,6 @@ data/ragtruth/full.jsonl
 
 # benchmark progress files (resume)
 data/results/.*.partial.json
+
+# local scratch
+.scratch/

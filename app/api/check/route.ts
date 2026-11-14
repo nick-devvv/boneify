@@ -2,7 +2,7 @@ import { z } from "zod";
 import { errorJson, errorResponse, json, options } from "../../../lib/api";
 import { ApiError } from "../../../lib/errors";
 import { checkDocument, LIMITS, type CheckInput } from "../../../lib/pipeline";
-import { getSample } from "../../../lib/samples";
+import { getSample, getSamplePdf } from "../../../lib/samples";
 import type { DecideContext, SourceInput } from "../../../lib/types";
 
 export const runtime = "nodejs";
@@ -64,6 +64,7 @@ async function fromJson(req: Request): Promise<CheckInput> {
   oneSource(["sourceText", "sourceUrl", "sampleId"].filter((k) => present(b[k as keyof typeof b])));
 
   let source: SourceInput;
+  let pdfBytes: Uint8Array | undefined;
   let aiText = b.aiText;
   let context: DecideContext | undefined = b.context ?? (b.task || b.question ? { task: b.task, question: b.question } : undefined);
   if (present(b.sampleId)) {
@@ -71,13 +72,14 @@ async function fromJson(req: Request): Promise<CheckInput> {
     source = { kind: "text", text: s.sourceText, name: s.sourceName };
     if (!present(aiText)) aiText = s.aiText;
     context = context ?? s.context;
+    if (s.pdfFile) pdfBytes = await getSamplePdf(s);
   } else if (present(b.sourceUrl)) {
     source = { kind: "url", url: checkUrl(b.sourceUrl!), name: b.sourceName };
   } else {
     if (b.sourceText!.length > LIMITS.sourceChars) throw new ApiError(413, "too_large", `sourceText is over ${LIMITS.sourceChars.toLocaleString("en-US")} characters.`);
     source = { kind: "text", text: b.sourceText!, name: b.sourceName || "source.txt" };
   }
-  return { source, aiText: aiText ?? "", context, decider: b.decider, perceiver: b.perceiver, compare: b.compare || undefined, reviewThreshold: b.reviewThreshold };
+  return { source, aiText: aiText ?? "", context, decider: b.decider, perceiver: b.perceiver, compare: b.compare || undefined, reviewThreshold: b.reviewThreshold, pdfBytes };
 }
 
 async function fromForm(req: Request): Promise<CheckInput> {
@@ -104,6 +106,7 @@ async function fromForm(req: Request): Promise<CheckInput> {
   let context: DecideContext | undefined = str("task") || str("question") ? { task: str("task"), question: str("question") } : undefined;
   let aiText = str("aiText");
   let source: SourceInput;
+  let pdfBytes: Uint8Array | undefined;
 
   if (hasFile) {
     const f = file as File;
@@ -115,12 +118,13 @@ async function fromForm(req: Request): Promise<CheckInput> {
     source = { kind: "text", text: s.sourceText, name: s.sourceName };
     aiText = aiText ?? s.aiText;
     context = context ?? s.context;
+    if (s.pdfFile) pdfBytes = await getSamplePdf(s);
   } else if (str("sourceUrl")) {
     source = { kind: "url", url: checkUrl(str("sourceUrl")!), name: str("sourceName") };
   } else {
     source = { kind: "text", text: str("sourceText")!, name: str("sourceName") || "source.txt" };
   }
-  return { source, aiText: aiText ?? "", context, decider: str("decider"), perceiver: str("perceiver"), compare: str("compare"), reviewThreshold };
+  return { source, aiText: aiText ?? "", context, decider: str("decider"), perceiver: str("perceiver"), compare: str("compare"), reviewThreshold, pdfBytes };
 }
 
 export async function POST(req: Request): Promise<Response> {
