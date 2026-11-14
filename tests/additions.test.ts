@@ -110,8 +110,12 @@ describe("GET /api/benchmark: dataset, improvement, ?task=", () => {
     expect(local.dataset.sentences).toBe(dataset.sentences); // facts always match the runs
   });
 
-  it("improvement is null with one run", async () => {
-    expect((await get()).improvement).toBeNull();
+  it("improvement compares the drex run with the first llm-* run once both exist", async () => {
+    const { improvement, runs } = await get();
+    const names = runs.map((r: { run: string }) => r.run);
+    if (!names.includes("drex") || !names.some((n: string) => n.startsWith("llm-"))) return expect(improvement).toBeNull();
+    expect(improvement).toMatchObject({ drex: "drex", baseline: expect.stringMatching(/^llm-/) });
+    for (const k of ["speedup", "costRatio", "f1Delta", "precisionDelta", "recallDelta"]) expect(typeof improvement[k]).toBe("number");
   });
 
   it("?task= gives each row that task's numbers, and rejects unknown tasks", async () => {
