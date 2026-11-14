@@ -1,7 +1,7 @@
 // checkDocument(): read the source once, split the AI text, decide + ground in parallel, combine into a CheckResult.
 
 import { randomUUID } from "node:crypto";
-import type { CheckResult, CheckedClaim, Comparison, DecideContext, Receipt, SourceInput, Usage } from "./types";
+import type { CheckResult, CheckedClaim, Comparison, DecideContext, ProfileResult, Receipt, SourceInput, Usage } from "./types";
 import { getConfig, type Config } from "./config";
 import { ApiError } from "./errors";
 import { extractClaims } from "./claims";
@@ -93,7 +93,16 @@ export async function checkDocument(input: CheckInput, cfg: Config = getConfig()
         }
       })()
     : Promise.resolve(null);
-  const [decided, grounded, rivalRun] = await Promise.all([decidePromise, groundPromise, comparePromise]);
+  // What the document is and its key facts (NDI classify + extract). Optional: never fails the check.
+  const profilePromise: Promise<ProfileResult | null> = perceiver.profile
+    ? perceiver.profile(doc).catch((err) => {
+        warnings.push(`${perceiver.label} could not profile the document (${err instanceof Error ? err.message : String(err)}).`);
+        return null;
+      })
+    : Promise.resolve(null);
+  const [decided, grounded, rivalRun, profiled] = await Promise.all([decidePromise, groundPromise, comparePromise, profilePromise]);
+  if (profiled?.warnings.length) warnings.push(...profiled.warnings);
+  const keyFacts = profiled?.keyFacts ?? [];
   if (grounded.warnings?.length) warnings.push(...grounded.warnings);
 
   // 4. Combine.
@@ -122,6 +131,7 @@ export async function checkDocument(input: CheckInput, cfg: Config = getConfig()
   let docId: string | null = null;
   let annotations: unknown[] = [];
   for (const c of checked) c.receipt = { ...c.receipt, highlight: null };
+  for (const f of keyFacts) f.highlight = null;
   if (pdf) {
     try {
       const layout = await pdfLayout(pdf);
@@ -134,6 +144,10 @@ export async function checkDocument(input: CheckInput, cfg: Config = getConfig()
       for (const c of checked) {
         if (c.receipt.status !== "found") continue;
         c.receipt.highlight = highlightFor(layout, c.receipt.quote, c.receipt.page, lineAround(c.receipt.charStart, c.receipt.charEnd));
+      }
+      for (const f of keyFacts) {
+        if (f.status === "not_found" || !f.quote) continue;
+        f.highlight = highlightFor(layout, f.quote, f.page, lineAround(f.charStart, f.charEnd));
       }
       docId = adobeDocId(pdf);
       annotations = adobeAnnotations(docId, checked);
@@ -161,8 +175,9 @@ export async function checkDocument(input: CheckInput, cfg: Config = getConfig()
 
   const count = (v: string) => checked.filter((c) => c.verdict === v).length;
   const supported = count("supported");
-  const usage: { decide: Usage; ground?: Usage } = { decide: decided.usage };
+  const usage: CheckResult["usage"] = { decide: decided.usage };
   if (grounded.usage) usage.ground = grounded.usage;
+  if (profiled?.usage) usage.profile = profiled.usage;
 
   return {
     id: randomUUID(),
@@ -184,5 +199,7 @@ export async function checkDocument(input: CheckInput, cfg: Config = getConfig()
     ...(comparison !== undefined ? { comparison } : {}),
     adobeDocId: docId,
     adobeAnnotations: annotations,
+    documentType: profiled?.documentType ?? null,
+    keyFacts,
   };
 }

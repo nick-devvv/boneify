@@ -57,7 +57,30 @@ export interface Perceiver {
   id: string; label: string;
   parse(input: SourceInput): Promise<SourceDocument>;
   ground(doc: SourceDocument, claims: Claim[]): Promise<GroundResult>;
+  profile?(doc: SourceDocument): Promise<ProfileResult>; // optional: what kind of document this is, and its key facts with citations
 }
+
+// What the document is (NDI classify) and the facts it states (NDI extract). Both optional extras: they never fail a check.
+export interface DocumentType {
+  id: string;                // "contract" | "financial_report" | "invoice" | "policy" | "article" | "other"
+  label: string;             // "Contract"
+  confidence: number | null; // 0..1
+  reason: string | null;     // NDI's one-line reason
+}
+export interface KeyFact {
+  field: string;             // JSON Pointer from NDI: "/parties", "/key_figures/0"
+  label: string;             // "Parties", "Monthly service fee"
+  value: string | null;      // as written in the document: "$12,500", "three (3) years"
+  status: "found" | "not_found" | "ambiguous";
+  page: number | null;
+  quote: string | null;      // the source text NDI read it from
+  section: string | null;    // clause number, when the quote starts one ("3.1")
+  confidence: number | null;
+  charStart: number | null;  // offsets into the parsed text, when the quote was found there
+  charEnd: number | null;
+  highlight?: Highlight | null; // where the quote sits on the PDF page (same shape as Receipt.highlight)
+}
+export interface ProfileResult { documentType: DocumentType | null; keyFacts: KeyFact[]; latencyMs: number; usage?: Usage; warnings: string[] }
 
 // What POST /api/check returns.
 export interface CheckedClaim extends Claim {
@@ -73,11 +96,13 @@ export interface CheckResult {
   summary: { total: number; supported: number; contradicted: number; not_in_source: number;
              needsReview: number; trustScore: number }; // trustScore = % of sentences supported, 0..100
   timings: { parseMs: number; decideMs: number; groundMs: number; totalMs: number };
-  usage: { decide: Usage; ground?: Usage };
+  usage: { decide: Usage; ground?: Usage; profile?: Usage };
   warnings: string[];        // e.g. "NDI could not locate 2 sentences; used the built-in matcher"
   comparison?: Comparison | null; // only when the request sent `compare`; null if that decider failed
   adobeDocId: string | null;        // pass as metaData.id to the Adobe PDF Embed API's previewFile; null when the source isn't a PDF
   adobeAnnotations: unknown[];      // ready-made Adobe highlight annotations, one per receipt with a box, coloured by verdict
+  documentType: DocumentType | null; // NDI classify; null with the built-in reader or if classify failed
+  keyFacts: KeyFact[];               // NDI extract, each with its citation; [] with the built-in reader or if extract failed
 }
 
 // A second decider raced on the same parsed document and claims (POST /api/check with "compare").
