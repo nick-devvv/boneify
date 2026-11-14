@@ -13,7 +13,7 @@ export const ADOBE_CLIENT_ID = process.env.NEXT_PUBLIC_ADOBE_CLIENT_ID || "";
 
 type Ann = { id?: string; bodyValue?: string };
 type AdobeViewer = {
-  getAnnotationManager: () => Promise<{ addAnnotations: (a: unknown[]) => Promise<unknown>; selectAnnotation: (id: string) => Promise<unknown> }>;
+  getAnnotationManager: () => Promise<{ addAnnotations: (a: unknown[]) => Promise<unknown>; selectAnnotation: (id: string) => Promise<unknown>; setConfig: (c: Record<string, boolean>) => Promise<unknown> }>;
   getAPIs: () => Promise<{ gotoLocation: (page: number) => Promise<unknown> }>;
 };
 type AdobeDC = { View: new (o: { clientId: string; divId: string }) => { previewFile: (content: unknown, opts: unknown) => Promise<AdobeViewer> } };
@@ -49,12 +49,16 @@ export function AdobeViewer({ result, pdf, fileName, selected, height = 640, onF
       const view = new AdobeDC.View({ clientId: ADOBE_CLIENT_ID, divId });
       const content = "url" in pdf ? { location: { url: new URL(pdf.url, window.location.href).toString() } } : { promise: pdf.file.arrayBuffer() };
       return view.previewFile({ content, metaData: { fileName, id: result.adobeDocId } }, {
-        embedMode: "SIZED_CONTAINER", enableAnnotationAPIs: true, includePDFAnnotations: true, showAnnotationTools: false,
-        showDownloadPDF: false, showPrintPDF: false, showFullScreen: false,
+        // FULL_WINDOW + annotation tools left on: Adobe refuses annotation APIs otherwise ("Annotation APIs not enabled",
+        // "APIs not allowed on this PDF"). Its toolbar is hidden below with setConfig instead. includePDFAnnotations:false
+        // keeps our highlights out of the PDF itself, so no "unsaved changes / download" prompt appears.
+        embedMode: "FULL_WINDOW", enableAnnotationAPIs: true, includePDFAnnotations: false,
+        showDownloadPDF: false, showPrintPDF: false, showLeftHandPanel: false,
       }).then(async (v) => {
         if (dead) return;
         viewer.current = v;
         const m = await v.getAnnotationManager();
+        await m.setConfig({ showToolbar: false, showCommentsPanel: false, showToolsOnTextSelection: false }).catch(() => {});
         await m.addAnnotations(result.adobeAnnotations);
       });
     }).catch(() => { if (!dead) onFail(); });
