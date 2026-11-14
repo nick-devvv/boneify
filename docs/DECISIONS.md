@@ -40,6 +40,7 @@ Places where docs/MVP_SPEC.md was unclear or contradicted itself, and the simple
 30. **A sentence judged correct always shows evidence:** if the perceiver found no receipt for a `supported` sentence, the built-in matcher fills it in (`method: "lexical"`).
 31. **NDI classify + extract ("document profile").** With `PERCEIVER=ndi`, `/api/check` also runs NDI Classify (contract / financial report / invoice / policy / article) and NDI Extract (title, parties, effective date, up to 8 key figures, each with its citation) on the same parse, beside ground. Both are optional extras: they never fail a check, and a failure leaves `documentType: null` / `keyFacts: []` plus a warning. The built-in reader always gives `null` / `[]`. One schema serves every kind of document, so there is no second round trip after classify. Live on msa-summary: total time unchanged (about 7.8 s; profile finishes inside ground), 11 cited facts, contract at 0.999. New fields: `documentType: { id, label, confidence, reason } | null`, `keyFacts: [{ field, label, value, status, page, quote, section, confidence, charStart, charEnd, highlight }]`, `usage.profile`.
 32. **NDI cost is now read.** The live API sends `cost: { total_usd: "0.0081", lines: [...] }`; the code now reads `total_usd` (it reported $0 before). Ground and profile are counted separately even though they run at the same time. Live on msa-summary: ground about $0.17 (2 jobs), profile about $0.011, Drex decide about $0.0001.
+33. **Fix with Intern (`POST /api/fix`).** Same body as `/api/check`. boneify checks the text, [Intern](https://github.com/nace-ai/intern) rewrites only the flagged sentences from their receipts, and boneify checks the rewrite against the same document (read once; classify + extract are not repeated). Intern runs headless (`intern -p --json`) with System 1 = Drex (`drex-latest`, it decides when Intern is advancing, off plan or done) and System 2 = DeepInfra Qwen3.8-27B (it writes). DeepInfra is only Intern's writer: boneify's verdicts always come from the decider. Intern works in a throwaway temp folder with source.txt, draft.txt and issues.md, a turn budget (16), a 150 s timeout, and an environment holding only PATH, HOME, the Nace and DeepInfra keys and proxy settings. Live on msa-summary: trust score 70 → 100 in 36 s (check 8.8 s, Intern 24 s, re-check 3.3 s), 4 Drex decisions inside Intern. Where the `intern` CLI isn't installed (Vercel), the route answers `501 intern_unavailable`, and `/api/health` has `intern.ready` so the site can hide the button. A recorded live response is in `data/fixtures/fix-response.json`. Settings: `INTERN_BIN`, `INTERN_SYSTEM1`, `INTERN_SYSTEM2`, `INTERN_MAX_TURNS`, `INTERN_TIMEOUT_SECONDS`, `DEEPINFRA_API_KEY`.
 
 ### Using the highlights (front end)
 
@@ -54,3 +55,13 @@ view.then((v) => v.getAnnotationManager()).then((m) => m.addAnnotations(result.a
 ### Using the key facts (front end, optional)
 
 `result.documentType?.label` ("Contract") and `result.keyFacts.filter((k) => k.status === "found")` give a "Key facts" panel: `label`, `value`, then `§section · p.page` as the citation. `highlight` has the same shape as a receipt's, so clicking a fact can jump to its box in the Adobe viewer.
+
+### Using "Fix with Intern" (front end, optional)
+
+Show the button only when `health.intern.ready`. `POST /api/fix` takes the same body as `/api/check` and takes about 30–40 s, so show progress ("Intern is fixing 3 sentences…"). It returns:
+- `before` and `after`: two full check results. Show the trust score going from `before.summary.trustScore` to `after.summary.trustScore`.
+- `changes[]`: `{ before, after, verdict, evidence }`, one per flagged sentence, for a before → after list. `after: null` means Intern removed the sentence.
+- `fixedText`: the corrected text, with copy and download.
+- `intern`: `system1Asks` (how many decisions Drex made inside Intern), `decisions[]`, `toolCalls[]`, `system2`, `reply`.
+
+Build against `data/fixtures/fix-response.json` without running Intern.
