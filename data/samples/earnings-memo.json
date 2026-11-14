@@ -1,0 +1,24 @@
+{
+  "id": "earnings-memo",
+  "title": "Earnings release analyst memo",
+  "description": "AI analyst memo on a 2-page quarterly results release with 2 planted errors",
+  "sourceName": "earnings.pdf",
+  "pdfFile": "earnings.pdf",
+  "sourceText": "NORTHWIND ROBOTICS REPORTS THIRD QUARTER 2026 RESULTS\n\nPITTSBURGH, November 5, 2026 - Northwind Robotics, Inc., a maker of autonomous mobile robots for warehouses, today reported financial results for the third quarter ended September 30, 2026.\n\nThird quarter highlights\n- Revenue was $42.8 million, up 18% from $36.3 million in the third quarter of 2025.\n- Gross margin was 41.2%, compared with 37.9% a year earlier.\n- Net loss narrowed to $3.1 million, from a net loss of $7.4 million a year earlier.\n- The company shipped 1,240 robots, a record for a single quarter.\n- Recurring software revenue grew 31% to $11.6 million.\n\n\"Customers are moving from pilots to full-site rollouts,\" said Maya Okafor, Chief Executive Officer of Northwind Robotics. \"Our software attach rate keeps rising, and that is lifting our margins.\"\n\nBalance sheet\nNorthwind ended the quarter with $96.4 million in cash and short-term investments and no debt.\n\nOutlook\nFor the fourth quarter of 2026, Northwind expects revenue between $45 million and $47 million and expects to reach positive operating cash flow in the first half of 2027.\n\nManagement\nChief Financial Officer Ben Adeyemi will present the results at the Midwest Industrial Technology Conference on November 18, 2026.\n\nAbout Northwind Robotics\nNorthwind Robotics designs autonomous mobile robots and fleet software for distribution centers. The company is headquartered in Pittsburgh, Pennsylvania and employs about 820 people.",
+  "aiText": "Northwind Robotics reported third quarter 2026 revenue of $48.2 million, up 18% from a year earlier. Gross margin improved to 41.2% from 37.9%. The net loss narrowed to $3.1 million from $7.4 million. The company shipped a record 1,240 robots in the quarter. Recurring software revenue grew 31% to $11.6 million. Northwind ended the quarter with $96.4 million in cash and short-term investments and no debt. Management guided fourth quarter revenue to between $45 million and $47 million. On the call, the CEO announced she will step down at the end of the year.",
+  "context": {
+    "task": "Write a short analyst memo on the quarterly results"
+  },
+  "plantedErrors": [
+    {
+      "sentence": "Northwind Robotics reported third quarter 2026 revenue of $48.2 million, up 18% from a year earlier.",
+      "expected": "contradicted",
+      "why": "The release says revenue was $42.8 million (digits swapped)"
+    },
+    {
+      "sentence": "On the call, the CEO announced she will step down at the end of the year.",
+      "expected": "not_in_source",
+      "why": "The release never mentions the CEO stepping down"
+    }
+  ]
+}

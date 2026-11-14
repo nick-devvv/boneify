@@ -1,0 +1,43 @@
+{
+  "ok": true,
+  "version": "0.1.0",
+  "defaults": {
+    "decider": "local",
+    "perceiver": "local",
+    "reviewThreshold": 0.6
+  },
+  "deciders": [
+    {
+      "id": "local",
+      "label": "Simple rules (offline)",
+      "ready": true
+    },
+    {
+      "id": "llm",
+      "label": "Frontier LLM",
+      "model": "gpt-4o-mini",
+      "ready": false,
+      "note": "Set LLM_API_KEY to enable."
+    },
+    {
+      "id": "drex",
+      "label": "Drex",
+      "model": "drex-latest",
+      "ready": false,
+      "note": "Set NACE_API_KEY to enable."
+    }
+  ],
+  "perceivers": [
+    {
+      "id": "local",
+      "label": "Built-in reader (offline)",
+      "ready": true
+    },
+    {
+      "id": "ndi",
+      "label": "NDI (Nace Document Intelligence)",
+      "ready": false,
+      "note": "Set NACE_API_KEY to enable."
+    }
+  ]
+}
