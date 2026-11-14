@@ -154,7 +154,7 @@ export async function parseLocal(input: SourceInput): Promise<SourceDocument> {
   // URL source
   let res: Response;
   try {
-    res = await request(input.url, { headers: { "User-Agent": "Rexceipts/0.1 (+source reader)" } }, { provider: "Source URL", timeoutMs: 20_000, retries: 1 });
+    res = await request(input.url, { headers: { "User-Agent": "boneify/0.1 (+source reader)" } }, { provider: "Source URL", timeoutMs: 20_000, retries: 1 });
   } catch (err) {
     if (err instanceof ProviderError) throw new ApiError(422, "unreadable_file", `The source URL could not be fetched: ${err.message.replace(/^Source URL: /, "")}`);
     throw err;

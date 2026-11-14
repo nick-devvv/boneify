@@ -1,4 +1,4 @@
-# Rexceipts: build notes for event day
+# boneify: build notes for event day
 
 The spec ([MVP_SPEC.md](MVP_SPEC.md)) says *what* to build. This file says *how to rebuild it fast*: the order, the exact versions and commands, what needs a key, and every gotcha already hit and solved the night before. Hand both files to whoever (or whatever) is building, and follow this runbook top to bottom.
 
