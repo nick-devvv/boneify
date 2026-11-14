@@ -1,5 +1,5 @@
 {
-  "name": "rexceipts",
+  "name": "boneify",
   "version": "0.1.0",
   "private": true,
   "description": "Every AI claim gets a receipt. Checks AI-written text against its source document (Drexathon, Track 1).",

@@ -1,0 +1,290 @@
+{
+  "id": "17ecc514-5a96-4095-b4be-0fd049bfef3b",
+  "createdAt": "2026-11-14T08:52:51.197Z",
+  "engines": {
+    "decider": "local",
+    "deciderModel": "rules-v1",
+    "perceiver": "local"
+  },
+  "source": {
+    "name": "msa.pdf",
+    "format": "text",
+    "pages": 1,
+    "characters": 2681
+  },
+  "claims": [
+    {
+      "id": "s1",
+      "index": 0,
+      "text": "This Master Services Agreement between Harbor Analytics LLC and Juniper Freight Co. took effect on March 1, 2026.",
+      "start": 0,
+      "end": 113,
+      "verdict": "supported",
+      "probabilities": {
+        "supported": 0.987046,
+        "contradicted": 0.007379,
+        "not_in_source": 0.005575
+      },
+      "confidence": 0.987046,
+      "needsReview": false,
+      "receipt": {
+        "status": "found",
+        "page": 1,
+        "quote": "MASTER SERVICES AGREEMENT\n\nThis Master Services Agreement (the \"Agreement\") is entered into as of March 1, 2026 (the \"Effective Date\") by and between Harbor Analytics LLC, a Delaware limited liability company (\"Provider\"), and Juniper Freight Co., an Oregon corporation (\"Customer\").",
+        "charStart": 0,
+        "charEnd": 283,
+        "method": "lexical",
+        "score": 0.923,
+        "section": null
+      }
+    },
+    {
+      "id": "s2",
+      "index": 1,
+      "text": "Harbor Analytics provides route-optimization analytics, a hosted reporting dashboard and quarterly planning workshops.",
+      "start": 114,
+      "end": 232,
+      "verdict": "supported",
+      "probabilities": {
+        "supported": 0.980336,
+        "contradicted": 0.010852,
+        "not_in_source": 0.008813
+      },
+      "confidence": 0.980336,
+      "needsReview": false,
+      "receipt": {
+        "status": "found",
+        "page": 1,
+        "quote": "SERVICES\n1.1 Scope. Provider will deliver route-optimization analytics, a hosted reporting dashboard and quarterly planning workshops as described in Statement of Work No. 1.",
+        "charStart": 288,
+        "charEnd": 462,
+        "method": "lexical",
+        "score": 0.818,
+        "section": "1.1"
+      }
+    },
+    {
+      "id": "s3",
+      "index": 2,
+      "text": "The dashboard must be available at least 99.5% of each month, excluding announced maintenance.",
+      "start": 233,
+      "end": 327,
+      "verdict": "supported",
+      "probabilities": {
+        "supported": 0.993307,
+        "contradicted": 0.004016,
+        "not_in_source": 0.002677
+      },
+      "confidence": 0.993307,
+      "needsReview": false,
+      "receipt": {
+        "status": "found",
+        "page": 1,
+        "quote": "1.2 Service Levels. Provider will keep the dashboard available at least 99.5% of each calendar month, excluding scheduled maintenance announced 48 hours in advance.",
+        "charStart": 463,
+        "charEnd": 627,
+        "method": "lexical",
+        "score": 1,
+        "section": "1.2"
+      }
+    },
+    {
+      "id": "s4",
+      "index": 3,
+      "text": "The agreement runs for five years.",
+      "start": 328,
+      "end": 362,
+      "verdict": "contradicted",
+      "probabilities": {
+        "supported": 0.219318,
+        "contradicted": 0.588185,
+        "not_in_source": 0.192497
+      },
+      "confidence": 0.588185,
+      "needsReview": true,
+      "receipt": {
+        "status": "found",
+        "page": 1,
+        "quote": "4.2 These obligations survive for three (3) years after this Agreement ends.",
+        "charStart": 1576,
+        "charEnd": 1652,
+        "method": "lexical",
+        "score": 0.667,
+        "section": "4.2"
+      }
+    },
+    {
+      "id": "s5",
+      "index": 4,
+      "text": "After that, it renews automatically for one-year periods unless either party gives 90 days' notice.",
+      "start": 363,
+      "end": 462,
+      "verdict": "supported",
+      "probabilities": {
+        "supported": 0.993307,
+        "contradicted": 0.004016,
+        "not_in_source": 0.002677
+      },
+      "confidence": 0.993307,
+      "needsReview": false,
+      "receipt": {
+        "status": "found",
+        "page": 1,
+        "quote": "2.2 Renewal. After the initial term, this Agreement renews automatically for successive one (1) year periods unless either party gives written notice of non-renewal at least ninety (90) days before the end of the then-current term.",
+        "charStart": 734,
+        "charEnd": 965,
+        "method": "lexical",
+        "score": 1,
+        "section": "2.2"
+      }
+    },
+    {
+      "id": "s6",
+      "index": 5,
+      "text": "Juniper Freight pays a monthly service fee of $18,500.",
+      "start": 463,
+      "end": 517,
+      "verdict": "contradicted",
+      "probabilities": {
+        "supported": 0.108558,
+        "contradicted": 0.695451,
+        "not_in_source": 0.195991
+      },
+      "confidence": 0.695451,
+      "needsReview": false,
+      "receipt": {
+        "status": "found",
+        "page": 1,
+        "quote": "FEES AND PAYMENT\n3.1 Fees. Customer shall pay Provider a monthly service fee of $12,500.",
+        "charStart": 970,
+        "charEnd": 1058,
+        "method": "lexical",
+        "score": 0.667,
+        "section": "3.1"
+      }
+    },
+    {
+      "id": "s7",
+      "index": 6,
+      "text": "Invoices are payable within 30 days, and late amounts accrue interest at 1% per month.",
+      "start": 518,
+      "end": 604,
+      "verdict": "supported",
+      "probabilities": {
+        "supported": 0.930862,
+        "contradicted": 0.034801,
+        "not_in_source": 0.034337
+      },
+      "confidence": 0.930862,
+      "needsReview": false,
+      "receipt": {
+        "status": "found",
+        "page": 1,
+        "quote": "3.3 Late Payment. Undisputed amounts not paid when due accrue interest at 1% per month.",
+        "charStart": 1181,
+        "charEnd": 1268,
+        "method": "lexical",
+        "score": 0.625,
+        "section": "3.3"
+      }
+    },
+    {
+      "id": "s8",
+      "index": 7,
+      "text": "Either party may terminate for convenience on 30 days' notice.",
+      "start": 605,
+      "end": 667,
+      "verdict": "contradicted",
+      "probabilities": {
+        "supported": 0.291796,
+        "contradicted": 0.550825,
+        "not_in_source": 0.157379
+      },
+      "confidence": 0.550825,
+      "needsReview": true,
+      "receipt": {
+        "status": "found",
+        "page": 1,
+        "quote": "TERMINATION\n6.1 Termination for Cause. Either party may terminate this Agreement if the other party materially breaches it and does not cure the breach within thirty (30) days after written notice.",
+        "charStart": 1790,
+        "charEnd": 1987,
+        "method": "lexical",
+        "score": 0.833,
+        "section": "6.1"
+      }
+    },
+    {
+      "id": "s9",
+      "index": 8,
+      "text": "Each party's liability is capped at the fees paid in the twelve months before the claim.",
+      "start": 668,
+      "end": 756,
+      "verdict": "supported",
+      "probabilities": {
+        "supported": 0.977023,
+        "contradicted": 0.012533,
+        "not_in_source": 0.010444
+      },
+      "confidence": 0.977023,
+      "needsReview": false,
+      "receipt": {
+        "status": "found",
+        "page": 1,
+        "quote": "LIABILITY\n7.1 Cap. Except for breaches of Section 4, each party's total liability under this Agreement is limited to the fees paid by Customer in the twelve (12) months before the claim.",
+        "charStart": 2174,
+        "charEnd": 2360,
+        "method": "lexical",
+        "score": 0.857,
+        "section": "7.1"
+      }
+    },
+    {
+      "id": "s10",
+      "index": 9,
+      "text": "The agreement is governed by Delaware law.",
+      "start": 757,
+      "end": 799,
+      "verdict": "supported",
+      "probabilities": {
+        "supported": 0.993307,
+        "contradicted": 0.004016,
+        "not_in_source": 0.002677
+      },
+      "confidence": 0.993307,
+      "needsReview": false,
+      "receipt": {
+        "status": "found",
+        "page": 1,
+        "quote": "GENERAL\n8.1 Governing Law. This Agreement is governed by the laws of the State of Delaware.",
+        "charStart": 2365,
+        "charEnd": 2456,
+        "method": "lexical",
+        "score": 1,
+        "section": "8.1"
+      }
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "supported": 7,
+    "contradicted": 3,
+    "not_in_source": 0,
+    "needsReview": 2,
+    "trustScore": 70
+  },
+  "timings": {
+    "parseMs": 0,
+    "decideMs": 16,
+    "groundMs": 3,
+    "totalMs": 18
+  },
+  "usage": {
+    "decide": {
+      "requests": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "costUsd": 0
+    }
+  },
+  "warnings": []
+}
