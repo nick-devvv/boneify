@@ -1,0 +1,59 @@
+{
+  "dataset": {
+    "name": "RAGTruth",
+    "split": "test",
+    "seed": 2026,
+    "examples": 450,
+    "sentences": 3041,
+    "wrong": {
+      "total": 266,
+      "contradicted": 123,
+      "notInSource": 143
+    },
+    "writerModels": 6,
+    "byTask": {
+      "QA": {
+        "examples": 150,
+        "sentences": 926,
+        "wrong": 44
+      },
+      "Summary": {
+        "examples": 150,
+        "sentences": 812,
+        "wrong": 46
+      },
+      "Data2txt": {
+        "examples": 150,
+        "sentences": 1303,
+        "wrong": 176
+      }
+    }
+  },
+  "runs": [
+    {
+      "run": "local",
+      "label": "Simple rules (offline)",
+      "decider": "local",
+      "model": "rules-v1",
+      "createdAt": "2026-11-14T08:52:15.750Z",
+      "dataset": {
+        "name": "RAGTruth",
+        "split": "test",
+        "examples": 450,
+        "sentences": 3041
+      },
+      "headline": {
+        "sentenceF1": 0.2544,
+        "sentencePrecision": 0.1497,
+        "sentenceRecall": 0.8459,
+        "responseF1": 0.609,
+        "threeWayAccuracy": 0.5367,
+        "p50LatencyMs": 2,
+        "meanLatencyMs": 2,
+        "costPerThousandSentencesUsd": 0,
+        "totalCostUsd": 0
+      }
+    }
+  ],
+  "improvement": null
+}

@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+
+# next.js / vercel
+.next/
+out/
+.vercel/
+
+# env files (keys live here; never commit)
+.env
+.env*.local
+!.env.example
+
+# test / logs / os
+coverage/
+*.log
+.DS_Store
+
+# benchmark runs made against the mock Nace server (never shown on the scoreboard)
+data/results/*-mock.json
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+data/ragtruth/full.jsonl
+
+# benchmark progress files (resume)
+data/results/.*.partial.json

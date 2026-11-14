@@ -1,0 +1,597 @@
+{
+  "run": "local",
+  "label": "Simple rules (offline)",
+  "metrics": {
+    "examples": 450,
+    "failedExamples": 0,
+    "sentences": 3041,
+    "wrongSentencesInKey": 266,
+    "sentence": {
+      "tp": 225,
+      "fp": 1278,
+      "fn": 41,
+      "tn": 1497,
+      "precision": 0.1497,
+      "recall": 0.8459,
+      "f1": 0.2544,
+      "accuracy": 0.5663,
+      "threeWayAccuracy": 0.5367
+    },
+    "response": {
+      "tp": 162,
+      "fp": 199,
+      "fn": 9,
+      "tn": 80,
+      "precision": 0.4488,
+      "recall": 0.9474,
+      "f1": 0.609,
+      "accuracy": 0.5378
+    },
+    "latency": {
+      "meanMs": 2,
+      "p50Ms": 2,
+      "p95Ms": 4,
+      "totalMs": 909
+    },
+    "cost": {
+      "totalUsd": 0,
+      "perThousandSentencesUsd": 0,
+      "requests": 0,
+      "inputTokens": 0,
+      "outputTokens": 0
+    },
+    "byTask": {
+      "QA": {
+        "examples": 150,
+        "sentences": 926,
+        "sentence": {
+          "tp": 33,
+          "fp": 250,
+          "fn": 11,
+          "tn": 632,
+          "precision": 0.1166,
+          "recall": 0.75,
+          "f1": 0.2018,
+          "accuracy": 0.7181,
+          "threeWayAccuracy": 0.7117
+        },
+        "response": {
+          "tp": 27,
+          "fp": 80,
+          "fn": 1,
+          "tn": 42,
+          "precision": 0.2523,
+          "recall": 0.9643,
+          "f1": 0.4,
+          "accuracy": 0.46
+        },
+        "latency": {
+          "meanMs": 2,
+          "p50Ms": 2,
+          "p95Ms": 6,
+          "totalMs": 332
+        },
+        "cost": {
+          "totalUsd": 0,
+          "perThousandSentencesUsd": 0,
+          "requests": 0,
+          "inputTokens": 0,
+          "outputTokens": 0
+        }
+      },
+      "Summary": {
+        "examples": 150,
+        "sentences": 812,
+        "sentence": {
+          "tp": 23,
+          "fp": 176,
+          "fn": 23,
+          "tn": 590,
+          "precision": 0.1156,
+          "recall": 0.5,
+          "f1": 0.1878,
+          "accuracy": 0.7549,
+          "threeWayAccuracy": 0.7438
+        },
+        "response": {
+          "tp": 28,
+          "fp": 76,
+          "fn": 8,
+          "tn": 38,
+          "precision": 0.2692,
+          "recall": 0.7778,
+          "f1": 0.4,
+          "accuracy": 0.44
+        },
+        "latency": {
+          "meanMs": 2,
+          "p50Ms": 2,
+          "p95Ms": 4,
+          "totalMs": 292
+        },
+        "cost": {
+          "totalUsd": 0,
+          "perThousandSentencesUsd": 0,
+          "requests": 0,
+          "inputTokens": 0,
+          "outputTokens": 0
+        }
+      },
+      "Data2txt": {
+        "examples": 150,
+        "sentences": 1303,
+        "sentence": {
+          "tp": 169,
+          "fp": 852,
+          "fn": 7,
+          "tn": 275,
+          "precision": 0.1655,
+          "recall": 0.9602,
+          "f1": 0.2824,
+          "accuracy": 0.3408,
+          "threeWayAccuracy": 0.2832
+        },
+        "response": {
+          "tp": 107,
+          "fp": 43,
+          "fn": 0,
+          "tn": 0,
+          "precision": 0.7133,
+          "recall": 1,
+          "f1": 0.8327,
+          "accuracy": 0.7133
+        },
+        "latency": {
+          "meanMs": 2,
+          "p50Ms": 2,
+          "p95Ms": 4,
+          "totalMs": 285
+        },
+        "cost": {
+          "totalUsd": 0,
+          "perThousandSentencesUsd": 0,
+          "requests": 0,
+          "inputTokens": 0,
+          "outputTokens": 0
+        }
+      }
+    },
+    "abstain": [
+      {
+        "threshold": 0.5,
+        "coverage": 0.9027,
+        "accuracy": 0.553
+      },
+      {
+        "threshold": 0.6,
+        "coverage": 0.7096,
+        "accuracy": 0.6297
+      },
+      {
+        "threshold": 0.7,
+        "coverage": 0.4791,
+        "accuracy": 0.7914
+      },
+      {
+        "threshold": 0.8,
+        "coverage": 0.3532,
+        "accuracy": 0.9041
+      },
+      {
+        "threshold": 0.9,
+        "coverage": 0.2371,
+        "accuracy": 0.9875
+      },
+      {
+        "threshold": 0.95,
+        "coverage": 0.174,
+        "accuracy": 0.9887
+      }
+    ]
+  },
+  "total": 450,
+  "offset": 0,
+  "limit": 5,
+  "examples": [
+    {
+      "id": "12916",
+      "task": "QA",
+      "writerModel": "llama-2-13b-chat",
+      "latencyMs": 24,
+      "claims": [
+        {
+          "id": "s1",
+          "text": "Based on the given passages, the correct answer is:",
+          "gold": "supported",
+          "pred": "not_in_source",
+          "confidence": 0.68797,
+          "probabilities": {
+            "supported": 0.047426,
+            "contradicted": 0.264604,
+            "not_in_source": 0.68797
+          }
+        },
+        {
+          "id": "s2",
+          "text": "The drawer at the bottom of an oven stove is called a \"warming drawer\" and is intended to keep hot food at a serving temperature.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.897216,
+          "probabilities": {
+            "supported": 0.897216,
+            "contradicted": 0.050275,
+            "not_in_source": 0.052509
+          }
+        }
+      ]
+    },
+    {
+      "id": "12021",
+      "task": "QA",
+      "writerModel": "llama-2-7b-chat",
+      "latencyMs": 18,
+      "claims": [
+        {
+          "id": "s1",
+          "text": "Based on the provided passages, DNA can be defined as follows:",
+          "gold": "supported",
+          "pred": "not_in_source",
+          "confidence": 0.588792,
+          "probabilities": {
+            "supported": 0.158869,
+            "contradicted": 0.252339,
+            "not_in_source": 0.588792
+          }
+        },
+        {
+          "id": "s2",
+          "text": "A nucleic acid that contains the genetic instructions used in the development and functioning of all known living organisms and some viruses.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.993307,
+          "probabilities": {
+            "supported": 0.993307,
+            "contradicted": 0.004016,
+            "not_in_source": 0.002677
+          }
+        },
+        {
+          "id": "s3",
+          "text": "Made up of molecules called nucleotides, each containing a phosphate group, a sugar group, and a nitrogen base.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.960834,
+          "probabilities": {
+            "supported": 0.960834,
+            "contradicted": 0.020541,
+            "not_in_source": 0.018624
+          }
+        },
+        {
+          "id": "s4",
+          "text": "The order of these bases determines the genetic code.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.993307,
+          "probabilities": {
+            "supported": 0.993307,
+            "contradicted": 0.004016,
+            "not_in_source": 0.002677
+          }
+        },
+        {
+          "id": "s5",
+          "text": "A double helix formed by base pairs attached to a sugar-phosphate backbone.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.993307,
+          "probabilities": {
+            "supported": 0.993307,
+            "contradicted": 0.004016,
+            "not_in_source": 0.002677
+          }
+        },
+        {
+          "id": "s6",
+          "text": "Therefore, the answer to the question \"What is DNA?\" is:",
+          "gold": "supported",
+          "pred": "not_in_source",
+          "confidence": 0.660101,
+          "probabilities": {
+            "supported": 0.075858,
+            "contradicted": 0.264041,
+            "not_in_source": 0.660101
+          }
+        },
+        {
+          "id": "s7",
+          "text": "DNA is a nucleic acid that contains the genetic instructions used in the development and functioning of all known living organisms and some viruses, composed of molecules called nucleotides, which are arranged in a specific order to determine the genetic code, and takes the form of a double helix.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.799731,
+          "probabilities": {
+            "supported": 0.799731,
+            "contradicted": 0.093204,
+            "not_in_source": 0.107065
+          }
+        }
+      ]
+    },
+    {
+      "id": "12845",
+      "task": "QA",
+      "writerModel": "llama-2-70b-chat",
+      "latencyMs": 7,
+      "claims": [
+        {
+          "id": "s1",
+          "text": "Based on the given passages, here's a brief answer to the question \"How to sew a zipper gusset\":",
+          "gold": "supported",
+          "pred": "not_in_source",
+          "confidence": 0.777405,
+          "probabilities": {
+            "supported": 0.045179,
+            "contradicted": 0.177416,
+            "not_in_source": 0.777405
+          }
+        },
+        {
+          "id": "s2",
+          "text": "To sew a zipper gusset, first trace the pattern pieces for the zipper gusset and cut them out.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.635424,
+          "probabilities": {
+            "supported": 0.635424,
+            "contradicted": 0.16137,
+            "not_in_source": 0.203207
+          }
+        },
+        {
+          "id": "s3",
+          "text": "Place the zipper gusset pieces on top of the zipper, with the right sides facing each other, and sew a line near the seam line to secure the position.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.989763,
+          "probabilities": {
+            "supported": 0.989763,
+            "contradicted": 0.005939,
+            "not_in_source": 0.004299
+          }
+        },
+        {
+          "id": "s4",
+          "text": "Then, place the zipper gusset lining on top of the zipper gusset, with the right side facing down, and stitch on the seam line.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.989013,
+          "probabilities": {
+            "supported": 0.989013,
+            "contradicted": 0.006339,
+            "not_in_source": 0.004648
+          }
+        },
+        {
+          "id": "s5",
+          "text": "Flip the lining to the bottom of the main zipper gusset and topstitch near the seam line.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.982014,
+          "probabilities": {
+            "supported": 0.982014,
+            "contradicted": 0.009992,
+            "not_in_source": 0.007994
+          }
+        },
+        {
+          "id": "s6",
+          "text": "Repeat the process for the other side of the zipper gusset.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.952574,
+          "probabilities": {
+            "supported": 0.952574,
+            "contradicted": 0.024531,
+            "not_in_source": 0.022895
+          }
+        },
+        {
+          "id": "s7",
+          "text": "The width of the zipper in between the gusset should measure 1/2\".",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.993307,
+          "probabilities": {
+            "supported": 0.993307,
+            "contradicted": 0.004016,
+            "not_in_source": 0.002677
+          }
+        },
+        {
+          "id": "s8",
+          "text": "Finally, stitch on the seam allowance around the zipper gusset to attach the main and lining fabrics together.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.984733,
+          "probabilities": {
+            "supported": 0.984733,
+            "contradicted": 0.008588,
+            "not_in_source": 0.006679
+          }
+        },
+        {
+          "id": "s9",
+          "text": "However, it's worth noting that the given passages do not provide detailed instructions on how to sew a zipper gusset, and some steps may need to be inferred or reference additional sources.",
+          "gold": "supported",
+          "pred": "not_in_source",
+          "confidence": 0.69305,
+          "probabilities": {
+            "supported": 0.042651,
+            "contradicted": 0.264299,
+            "not_in_source": 0.69305
+          }
+        },
+        {
+          "id": "s10",
+          "text": "Therefore, it's recommended to consult further resources or seek guidance from an experienced sewer for more detailed instructions.",
+          "gold": "supported",
+          "pred": "not_in_source",
+          "confidence": 0.74498,
+          "probabilities": {
+            "supported": 0.006693,
+            "contradicted": 0.248327,
+            "not_in_source": 0.74498
+          }
+        }
+      ]
+    },
+    {
+      "id": "15198",
+      "task": "QA",
+      "writerModel": "gpt-4-0613",
+      "latencyMs": 2,
+      "claims": [
+        {
+          "id": "s1",
+          "text": "A caldera is a large depression caused by volcanic activity when a chamber of magma and lava gets emptied.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.906593,
+          "probabilities": {
+            "supported": 0.906593,
+            "contradicted": 0.046006,
+            "not_in_source": 0.047401
+          }
+        },
+        {
+          "id": "s2",
+          "text": "This cavity creates pressure and the overground rocks collapse to create a large depression.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.979942,
+          "probabilities": {
+            "supported": 0.979942,
+            "contradicted": 0.011052,
+            "not_in_source": 0.009005
+          }
+        },
+        {
+          "id": "s3",
+          "text": "On the other hand, a volcanic crater is a bowl-like structure at the top of a volcano around the opening that is used for the eruption of magma and lava.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.986423,
+          "probabilities": {
+            "supported": 0.986423,
+            "contradicted": 0.007706,
+            "not_in_source": 0.005871
+          }
+        },
+        {
+          "id": "s4",
+          "text": "This is a depression that is the result of sinking in of the rocks because of high pressure and it typically has the opening through which lava and ash flows upwards.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.873618,
+          "probabilities": {
+            "supported": 0.873618,
+            "contradicted": 0.060891,
+            "not_in_source": 0.065491
+          }
+        },
+        {
+          "id": "s5",
+          "text": "Craters can also be caused by impacts from meteorites, and can range in size from very small to several hundred km across.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.993307,
+          "probabilities": {
+            "supported": 0.993307,
+            "contradicted": 0.004016,
+            "not_in_source": 0.002677
+          }
+        }
+      ]
+    },
+    {
+      "id": "17515",
+      "task": "QA",
+      "writerModel": "gpt-3.5-turbo-0613",
+      "latencyMs": 8,
+      "claims": [
+        {
+          "id": "s1",
+          "text": "To poach an egg using a PoachPod, bring a large pot of water to a boil.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.868629,
+          "probabilities": {
+            "supported": 0.868629,
+            "contradicted": 0.063114,
+            "not_in_source": 0.068257
+          }
+        },
+        {
+          "id": "s2",
+          "text": "Lightly oil the silicone poaching pod and crack an egg into it, being careful not to break the yolk.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.978119,
+          "probabilities": {
+            "supported": 0.978119,
+            "contradicted": 0.011979,
+            "not_in_source": 0.009902
+          }
+        },
+        {
+          "id": "s3",
+          "text": "Place the pod in the boiling water and make sure it stays upright.",
+          "gold": "supported",
+          "pred": "contradicted",
+          "confidence": 0.54475,
+          "probabilities": {
+            "supported": 0.285772,
+            "contradicted": 0.54475,
+            "not_in_source": 0.169478
+          }
+        },
+        {
+          "id": "s4",
+          "text": "Cover the pot with a lid and let the egg cook for about 4-6 minutes.",
+          "gold": "supported",
+          "pred": "contradicted",
+          "confidence": 0.793932,
+          "probabilities": {
+            "supported": 0.087757,
+            "contradicted": 0.793932,
+            "not_in_source": 0.118311
+          }
+        },
+        {
+          "id": "s5",
+          "text": "Remove the lid and use a slotted spoon or tongs to lift the pod out of the water.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.993307,
+          "probabilities": {
+            "supported": 0.993307,
+            "contradicted": 0.004016,
+            "not_in_source": 0.002677
+          }
+        },
+        {
+          "id": "s6",
+          "text": "Flip the poaching pod upside down over a plate and gently press on the bottom to release the poached egg.",
+          "gold": "supported",
+          "pred": "supported",
+          "confidence": 0.993307,
+          "probabilities": {
+            "supported": 0.993307,
+            "contradicted": 0.004016,
+            "not_in_source": 0.002677
+          }
+        }
+      ]
+    }
+  ]
+}

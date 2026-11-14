@@ -1,0 +1,29 @@
+{
+  "id": "msa-summary",
+  "title": "Services contract summary",
+  "description": "AI summary of a 3-page MSA with 3 planted errors",
+  "sourceName": "msa.pdf",
+  "pdfFile": "msa.pdf",
+  "sourceText": "MASTER SERVICES AGREEMENT\n\nThis Master Services Agreement (the \"Agreement\") is entered into as of March 1, 2026 (the \"Effective Date\") by and between Harbor Analytics LLC, a Delaware limited liability company (\"Provider\"), and Juniper Freight Co., an Oregon corporation (\"Customer\").\n\n1. SERVICES\n1.1 Scope. Provider will deliver route-optimization analytics, a hosted reporting dashboard and quarterly planning workshops as described in Statement of Work No. 1.\n1.2 Service Levels. Provider will keep the dashboard available at least 99.5% of each calendar month, excluding scheduled maintenance announced 48 hours in advance.\n\n2. TERM\n2.1 Initial Term. The initial term of this Agreement is three (3) years from the Effective Date.\n2.2 Renewal. After the initial term, this Agreement renews automatically for successive one (1) year periods unless either party gives written notice of non-renewal at least ninety (90) days before the end of the then-current term.\n\n3. FEES AND PAYMENT\n3.1 Fees. Customer shall pay Provider a monthly service fee of $12,500.\n3.2 Invoices. Provider will invoice Customer monthly in arrears. Invoices are payable within thirty (30) days of receipt.\n3.3 Late Payment. Undisputed amounts not paid when due accrue interest at 1% per month.\n3.4 Price Changes. Provider may increase the monthly service fee once per year, by no more than 4%, with sixty (60) days' written notice.\n\n4. CONFIDENTIALITY\n4.1 Each party will protect the other party's Confidential Information with at least reasonable care and will use it only to perform this Agreement.\n4.2 These obligations survive for three (3) years after this Agreement ends.\n\n5. DATA\n5.1 Customer owns all shipment data it provides. Provider may use aggregated, anonymized data only to improve its services.\n\n6. TERMINATION\n6.1 Termination for Cause. Either party may terminate this Agreement if the other party materially breaches it and does not cure the breach within thirty (30) days after written notice.\n6.2 Effect of Termination. On termination, Customer will pay all fees due through the termination date, and Provider will return or delete Customer data within forty-five (45) days.\n\n7. LIABILITY\n7.1 Cap. Except for breaches of Section 4, each party's total liability under this Agreement is limited to the fees paid by Customer in the twelve (12) months before the claim.\n\n8. GENERAL\n8.1 Governing Law. This Agreement is governed by the laws of the State of Delaware.\n8.2 Notices. Notices must be in writing and sent to the addresses on the signature page.\n\nSigned by Dana Whitfield, Chief Executive Officer, Harbor Analytics LLC, and Luis Ortega, Chief Operating Officer, Juniper Freight Co.",
+  "aiText": "This Master Services Agreement between Harbor Analytics LLC and Juniper Freight Co. took effect on March 1, 2026. Harbor Analytics provides route-optimization analytics, a hosted reporting dashboard and quarterly planning workshops. The dashboard must be available at least 99.5% of each month, excluding announced maintenance. The agreement runs for five years. After that, it renews automatically for one-year periods unless either party gives 90 days' notice. Juniper Freight pays a monthly service fee of $18,500. Invoices are payable within 30 days, and late amounts accrue interest at 1% per month. Either party may terminate for convenience on 30 days' notice. Each party's liability is capped at the fees paid in the twelve months before the claim. The agreement is governed by Delaware law.",
+  "context": {
+    "task": "Summarize the contract for a partner"
+  },
+  "plantedErrors": [
+    {
+      "sentence": "The agreement runs for five years.",
+      "expected": "contradicted",
+      "why": "Section 2.1: the initial term is three (3) years"
+    },
+    {
+      "sentence": "Juniper Freight pays a monthly service fee of $18,500.",
+      "expected": "contradicted",
+      "why": "Section 3.1: the monthly service fee is $12,500"
+    },
+    {
+      "sentence": "Either party may terminate for convenience on 30 days' notice.",
+      "expected": "not_in_source",
+      "why": "Section 6.1 only allows termination for cause; the contract never mentions termination for convenience"
+    }
+  ]
+}
