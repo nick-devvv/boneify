@@ -81,3 +81,48 @@ describe("demo samples", () => {
     }
   });
 });
+
+describe("time budgets (a slow provider never runs a check past Vercel's limit)", () => {
+  const src = { kind: "text" as const, text: "The fee is $12,500 per month." };
+  const slow = <T,>(v: T, ms = 300) => new Promise<T>((r) => setTimeout(() => r(v), ms));
+
+  it("slow parse -> built-in reader; slow ground -> built-in matcher; slow key facts -> left out", async () => {
+    const { BUDGET } = await import("../lib/pipeline");
+    const { localPerceiver } = await import("../lib/perceive/local");
+    const saved = { ...BUDGET };
+    const orig = { parse: localPerceiver.parse, ground: localPerceiver.ground, profile: (localPerceiver as any).profile };
+    Object.assign(BUDGET, { parseMs: 50, groundMs: 50, profileMs: 50, profileGraceMs: 10 });
+    localPerceiver.parse = async (input) => slow(await orig.parse(input));
+    localPerceiver.ground = async (doc, claims) => slow(await orig.ground(doc, claims));
+    (localPerceiver as any).profile = async () => slow({ documentType: { id: "contract", label: "Contract", confidence: 1, reason: null }, keyFacts: [], latencyMs: 0, warnings: [] });
+    try {
+      const r = await checkDocument({ source: src, aiText: "The fee is $12,500 per month." }, offline);
+      expect(r.claims[0].receipt.status).toBe("found");
+      expect(r.documentType).toBeNull();
+      expect(r.warnings.join(" ")).toMatch(/took over 0.05 s to read the source; used the built-in reader/);
+      expect(r.warnings.join(" ")).toMatch(/no answer within 0.05 s.*built-in matcher/);
+      expect(r.warnings.join(" ")).toMatch(/key facts took too long/);
+    } finally {
+      Object.assign(BUDGET, saved);
+      localPerceiver.parse = orig.parse;
+      localPerceiver.ground = orig.ground;
+      (localPerceiver as any).profile = orig.profile;
+    }
+  });
+
+  it("a slow decider is a 504, not a hung request", async () => {
+    const { BUDGET } = await import("../lib/pipeline");
+    const { getDecider } = await import("../lib/decide");
+    const decider = getDecider("local", offline);
+    const saved = BUDGET.decideMs;
+    const orig = decider.decide;
+    BUDGET.decideMs = 50;
+    decider.decide = async (...a) => slow(await orig.apply(decider, a));
+    try {
+      await expect(checkDocument({ source: src, aiText: "The fee is $12,500 per month." }, offline)).rejects.toMatchObject({ status: 504, code: "provider_timeout" });
+    } finally {
+      BUDGET.decideMs = saved;
+      decider.decide = orig;
+    }
+  });
+});

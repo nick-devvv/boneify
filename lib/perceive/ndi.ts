@@ -236,7 +236,9 @@ export function createNdiPerceiver(cfg: Config = getConfig(), fetchImpl?: typeof
         let ids: { workspaceId?: string; fileId?: string } = {};
         if (input.kind === "url") {
           name = input.name || new URL(input.url).pathname.split("/").filter(Boolean).pop() || new URL(input.url).hostname;
-          source = { type: "url", url: input.url, file_name: safeName(name) };
+          // NDI picks its reader from the file name's extension; a page URL often has none ("/wiki/Golden_Gate_Bridge").
+          const fileName = /\.(pdf|html?|txt|md|json|csv|docx?|xlsx?|pptx?|rtf|xml|png|jpe?g)$/i.test(safeName(name)) ? safeName(name) : `${safeName(name)}.html`;
+          source = { type: "url", url: input.url, file_name: fileName };
         } else {
           const bytes = input.kind === "text" ? new TextEncoder().encode(input.text) : input.bytes;
           name = input.kind === "text" ? input.name || "source.txt" : input.name;
