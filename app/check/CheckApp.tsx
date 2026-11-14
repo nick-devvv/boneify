@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CheckResult, CheckedClaim } from "../../lib/types";
-import { ApiFailure, check, fix, getHealth, getSample, getSamples, split, type CheckInput, type FixResult, type Health, type SampleFull, type SampleInfo } from "../_ui/api";
+import { ApiFailure, check, fix, friendlyError, getHealth, getSample, getSamples, split, type CheckInput, type FixResult, type Health, type SampleFull, type SampleInfo } from "../_ui/api";
 import { Header } from "../_ui/Header";
 import { Key } from "../_ui/Key";
 import { REX, REX_HAPPY, REX_SIDE } from "../_ui/pixel";
@@ -55,7 +55,7 @@ export function CheckApp() {
   const [slam, setSlam] = useState(false);
   const [result, setResult] = useState<CheckResult | null>(null);
   const [offline, setOffline] = useState(false);
-  const [runError, setRunError] = useState<string | null>(null);
+  const [runError, setRunError] = useState<{ text: string; code: string } | null>(null);
   const [pendingClaims, setPendingClaims] = useState<string[]>([]);
   const timers = useRef<number[]>([]);
 
@@ -112,6 +112,8 @@ export function CheckApp() {
 
   const sample = sampleId ? sampleCache[sampleId] ?? null : null;
   const hasSource = Boolean(sample || file);
+  // Only the untouched contract sample has a recorded real check to fall back on.
+  const canRecord = !file && sample?.id === "msa-summary" && aiText === sample.aiText;
   const llmReady = health?.deciders.find((d) => d.id === "llm")?.ready ?? false;
   const mainDecider = health?.defaults.decider;
   const compare = llmReady && mainDecider !== "llm" ? "llm" : undefined;
@@ -148,12 +150,15 @@ export function CheckApp() {
     } catch (e) {
       const f = e as ApiFailure;
       // The venue Wi-Fi fallback: the recorded contract check, clearly labelled.
-      if (f.network && sample?.id === "msa-summary" && aiText === sample.aiText) { res = RECORDED; usedOffline = true; }
-      else { setRunError(f.message || "Something went wrong."); return; }
+      if (f.network && canRecord) { res = RECORDED; usedOffline = true; }
+      else { setRunError(friendlyError(f)); return; }
     }
     if (!res) return;
-    const r = res;
-    const wait = Math.max(0, (reduce ? 0 : 1100) - (performance.now() - started));
+    reveal(res, usedOffline, Math.max(0, (reduce ? 0 : 1100) - (performance.now() - started)));
+  }, [hasSource, aiText, file, sample, compare, reduce, canRecord]);
+
+  // Play the dig for a finished check: each sentence cracks open, then the results.
+  function reveal(r: CheckResult, usedOffline: boolean, wait: number) {
     at(wait, () => {
       setResult(r);
       setOffline(usedOffline);
@@ -164,7 +169,8 @@ export function CheckApp() {
       at(n * CRACK_MS + 450, () => setSlam(true));
       at(n * CRACK_MS + 2200, () => setStage("results"));
     });
-  }, [hasSource, aiText, file, sample, compare, reduce]);
+  }
+  const showRecorded = () => { setRunError(null); reveal(RECORDED, true, 0); };
 
   const skip = useCallback(() => { if (result) { clearTimers(); setDug(result.claims.length); setSlam(true); setStage("results"); } }, [result]);
   useEffect(() => {
@@ -178,7 +184,7 @@ export function CheckApp() {
     if (!lastInput.current || fixing) return;
     setFixing(true);
     setFixErr(null);
-    fix(lastInput.current).then(setFixRes).catch((e: ApiFailure) => setFixErr(e.message || "Intern couldn’t fix it.")).finally(() => setFixing(false));
+    fix(lastInput.current).then(setFixRes).catch((e: ApiFailure) => setFixErr(friendlyError(e).text)).finally(() => setFixing(false));
   };
 
   return (
@@ -199,7 +205,7 @@ export function CheckApp() {
       ) : null}
       {stage === "digging" ? (
         <DigOverlay
-          flood={flood} dropped={dropped} dug={dug} slam={slam} result={result} error={runError} sourceName={file?.name ?? sample?.sourceName ?? ""} reader={health?.defaults.perceiver === "ndi" ? "NDI" : "The reader"}
+          flood={flood} dropped={dropped} dug={dug} slam={slam} result={result} error={runError} onRecorded={canRecord ? showRecorded : undefined} sourceName={file?.name ?? sample?.sourceName ?? ""} reader={health?.defaults.perceiver === "ndi" ? "NDI" : "The reader"}
           placeholders={pendingClaims.length ? pendingClaims : Array.from({ length: count || 7 }, () => "")} onSkip={skip} onBack={restart}
         />
       ) : null}
@@ -292,7 +298,7 @@ function InputView(props: {
         </div>
       </main>
 
-      <section aria-label="Dig site" style={{ position: "relative", height: 420, marginTop: 10, overflow: "hidden" }}>
+      <section aria-label="Dig site" style={{ position: "relative", height: 420, marginTop: 10, overflowX: "clip", overflowY: "visible" }}>
         <div aria-hidden="true" style={{ position: "absolute", left: 0, right: 0, top: 128, height: 2, backgroundImage: "repeating-linear-gradient(90deg, #76665A 0 2px, transparent 2px 6px)" }} />
         <div aria-hidden="true" style={{ position: "absolute", left: 0, right: 0, top: 130, height: 46, backgroundColor: "#E9DCC6", backgroundImage: "radial-gradient(circle, rgba(34,23,15,.12) 1px, transparent 1.6px)", backgroundSize: "8px 8px" }} />
         <div aria-hidden="true" style={{ position: "absolute", left: 0, right: 0, top: 176, height: 46, backgroundColor: "#E1D1B6", backgroundImage: "radial-gradient(circle, rgba(34,23,15,.12) 1px, transparent 1.6px)", backgroundSize: "10px 10px" }} />
@@ -318,8 +324,8 @@ function InputView(props: {
 
 /* ---------- 2 · the dig ---------- */
 
-function DigOverlay({ flood, dropped, dug, slam, result, error, sourceName, reader, placeholders, onSkip, onBack }: {
-  flood: boolean; dropped: boolean; dug: number; slam: boolean; result: CheckResult | null; error: string | null; sourceName: string; reader: string; placeholders: string[]; onSkip: () => void; onBack: () => void;
+function DigOverlay({ flood, dropped, dug, slam, result, error, onRecorded, sourceName, reader, placeholders, onSkip, onBack }: {
+  flood: boolean; dropped: boolean; dug: number; slam: boolean; result: CheckResult | null; error: { text: string; code: string } | null; onRecorded?: () => void; sourceName: string; reader: string; placeholders: string[]; onSkip: () => void; onBack: () => void;
 }) {
   const claims: Array<Partial<CheckedClaim> & { text: string }> = result ? result.claims : placeholders.map((t) => ({ text: t }));
   const n = Math.max(1, claims.length);
@@ -334,19 +340,23 @@ function DigOverlay({ flood, dropped, dug, slam, result, error, sourceName, read
     <div role="status" aria-label="Checking" style={{ position: "absolute", inset: 0, zIndex: 20, background: "var(--ink)", color: "var(--paper)", clipPath: flood ? "circle(160% at 86% 30%)" : "circle(0px at 86% 30%)", transition: "clip-path 800ms cubic-bezier(.32,.72,0,1)" }}>
       <div style={{ position: "relative", maxWidth: 1440, margin: "0 auto", height: "100%", minHeight: 900 }}>
         <div style={{ position: "absolute", left: 60, right: 60, top: 36, display: "flex", alignItems: "center", gap: 18 }}>
-          <span className="mono" style={{ fontSize: 13, color: "var(--faint)" }}>{!result ? `${reader} is reading ${sourceName}…` : slam ? `${sourceName} · ${total} sentences checked` : `${deciderName(result.engines.decider)} is checking ${total} sentences`}</span>
+          <span className="mono" style={{ fontSize: 13, color: "var(--faint)" }}>{error ? `Check stopped · ${sourceName}` : !result ? `${reader} is reading ${sourceName}…` : slam ? `${sourceName} · ${total} sentences checked` : `${deciderName(result.engines.decider)} is checking ${total} sentences`}</span>
           {result && !error ? <button type="button" onClick={onSkip} className="press mono" style={{ marginLeft: "auto", border: 0, cursor: "pointer", background: "var(--ink-2)", color: "var(--paper)", fontSize: 12, padding: "8px 12px", borderRadius: 8 }}>Skip · Esc</button> : null}
         </div>
         <p className="mono" style={{ position: "absolute", left: 0, right: 0, top: 78, margin: 0, textAlign: "center", fontSize: 26, letterSpacing: ".04em" }}>
-          {result ? <>CHECKED {dug} / {total} <span style={{ color: "var(--red-light)" }}>· {bad} {bad === 1 ? "PROBLEM" : "PROBLEMS"}</span></> : "READING…"}
+          {error ? null : result ? <>CHECKED {dug} / {total} <span style={{ color: "var(--red-light)" }}>· {bad} {bad === 1 ? "PROBLEM" : "PROBLEMS"}</span></> : "READING…"}
         </p>
 
         {error ? (
           <div style={{ position: "absolute", left: 0, right: 0, top: 300, display: "flex", flexDirection: "column", alignItems: "center", gap: 18, textAlign: "center" }}>
             <Rex rows={REX_SIDE} width={120} dark />
             <p className="serif" style={{ margin: 0, fontSize: 48 }}>That didn’t work.</p>
-            <p style={{ margin: 0, fontSize: 18, color: "#D3C4AC", maxWidth: 560 }}>{error}</p>
-            <button type="button" onClick={onBack} className="btn-next press">Go back</button>
+            <p style={{ margin: 0, fontSize: 20, color: "#D3C4AC", maxWidth: 560 }}>{error.text}</p>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button type="button" onClick={onBack} className="btn-next press">Go back</button>
+              {onRecorded ? <button type="button" onClick={onRecorded} className="btn-dark press" style={{ boxShadow: "inset 0 0 0 1.5px #5A4A3C" }}>See a recorded check</button> : null}
+            </div>
+            <span className="mono" style={{ fontSize: 12, color: "#76665A" }}>{error.code}</span>
           </div>
         ) : (
           <>
@@ -484,7 +494,7 @@ function ResultsView({ result, offline, originalText, pdf, sel, onSel, onRestart
           <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 22, flexWrap: "wrap" }}>
             <span style={{ fontSize: 16, color: "var(--muted)" }}>Click a sentence to see the proof.</span>
             <Key />
-            {offline ? <span className="mono" style={{ fontSize: 12, background: "var(--grey-wash)", padding: "4px 8px", borderRadius: 6 }}>OFFLINE · recorded check of this sample</span> : null}
+            {offline ? <span className="mono" style={{ fontSize: 12, background: "var(--grey-wash)", padding: "4px 8px", borderRadius: 6 }}>RECORDED · an earlier real check of this sample</span> : null}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flex: "0 0 auto" }}>
