@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import type { CheckResult, CheckedClaim, Comparison, DecideContext, ProfileResult, Receipt, SourceDocument, SourceInput, Usage } from "./types";
 import { getConfig, type Config } from "./config";
-import { ApiError } from "./errors";
+import { ApiError, redact } from "./errors";
 import { extractClaims } from "./claims";
 import { getDecider } from "./decide";
 import { getPerceiver } from "./perceive";
@@ -237,7 +237,7 @@ export async function checkDocument(input: CheckInput, cfg: Config = getConfig()
     },
     timings: { parseMs, decideMs, groundMs, totalMs: ms(tStart) },
     usage,
-    warnings,
+    warnings: warnings.map(redact),
     ...(comparison !== undefined ? { comparison } : {}),
     adobeDocId: docId,
     adobeAnnotations: annotations,

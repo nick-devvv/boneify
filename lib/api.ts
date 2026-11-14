@@ -1,7 +1,7 @@
 // Shared route helpers: CORS on every response, OPTIONS, and the one error shape { error: { code, message } }.
 
 import { getConfig } from "./config";
-import { ApiError, ProviderError } from "./errors";
+import { ApiError, ProviderError, redact } from "./errors";
 
 export function corsHeaders(): Record<string, string> {
   return {
@@ -21,7 +21,7 @@ export function json(data: unknown, status = 200, extra: Record<string, string> 
 }
 
 export function errorJson(status: number, code: string, message: string): Response {
-  return json({ error: { code, message } }, status);
+  return json({ error: { code, message: redact(message) } }, status);
 }
 
 /** Map anything thrown into the contract's error shape. Never leaks keys or document text. */
