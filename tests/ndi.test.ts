@@ -17,7 +17,7 @@ const PAGE2 = "Customer shall pay a monthly service fee of $12,500.";
 interface Call { method: string; url: string; headers: Record<string, string>; body: any; form?: FormData }
 
 /** A scripted NDI: records every call; jobs answer "running" once, then "succeeded" on the next poll. */
-function fakeNdi(opts: { groundTargets?: (targets: any[]) => any[]; failGroundWith?: number } = {}) {
+function fakeNdi(opts: { groundTargets?: (targets: any[]) => any[]; failGroundWith?: number; failExtractWith?: number } = {}) {
   const calls: Call[] = [];
   const jobs = new Map<string, { result: any; polls: number }>();
   const job = (id: string, result: any) => { jobs.set(id, { result, polls: 0 }); return { job_id: id, kind: id.split("_")[0], status: "running", result: null, error: null, cost: null }; };
@@ -46,6 +46,22 @@ function fakeNdi(opts: { groundTargets?: (targets: any[]) => any[]; failGroundWi
       const targets = call.body.targets as any[];
       const out = opts.groundTargets ? opts.groundTargets(targets) : targets.map((t) => ({ id: t.id, status: "found", matches: [{ rank: 1, matched_text: PAGE2, match_method: "semantic", confidence: 0.88, location: { kind: "page_region", page: 2 } }] }));
       return json(job(`ground_${grounds}`, { result_type: "ground", targets: out }), 202);
+    }
+    if (u.pathname === "/v1/documents/classify") {
+      return json(job("classify_1", { result_type: "classify", units: [{ granularity: "document", unknown: false, labels: [{ class_id: "contract", label: "Contract", rank: 1, reason: "Titled Master Services Agreement.", confidence: 0.99 }] }], unknown_units: 0 }), 202);
+    }
+    if (u.pathname === "/v1/documents/extract") {
+      if (opts.failExtractWith) return json({ error: { message: "invalid_schema" } }, opts.failExtractWith);
+      const cite = (page: number, text: string) => [{ location: { kind: "page_region", page, polygons: [] }, source_text: text }];
+      return json(job("extract_1", { result_type: "extract",
+        data: { title: PAGE1, parties: null, effective_date: null, key_figures: [{ what: "Monthly service fee", value: "$12,500" }] },
+        fields: [
+          { path: "/title", value: PAGE1, status: "found", confidence: 0.9, citations: cite(1, PAGE1) },
+          { path: "/parties", value: null, status: "not_found", confidence: null, citations: [] },
+          { path: "/effective_date", value: null, status: "not_found", confidence: null, citations: [] },
+          { path: "/key_figures/0", value: '{"what": "Monthly service fee", "value": "$12,500"}', status: "found", confidence: 0.9, citations: cite(2, PAGE2) },
+          { path: "/key_figures/0/value", value: "$12,500", status: "found", confidence: null, citations: [] },
+        ] }), 202);
     }
     const m = u.pathname.match(/^\/v1\/documents\/jobs\/(.+)$/);
     if (m) {
@@ -182,5 +198,52 @@ describe("NDI ground", () => {
     const g = await ndi.ground(doc, extractClaims("Customer shall pay a monthly service fee."));
     expect(g.receipts.s1.method).toBe("lexical");
     expect(g.warnings?.[0]).toMatch(/built-in matcher/);
+  });
+});
+
+describe("NDI profile (classify + extract)", () => {
+  const pdf = { kind: "file" as const, bytes: new Uint8Array([1, 2, 3]), name: "msa.pdf", mimeType: "application/pdf" };
+
+  it("classifies and extracts on the parse result, with citations located in the text", async () => {
+    const { f, calls } = fakeNdi();
+    const ndi = createNdiPerceiver(cfg, f);
+    const doc = await ndi.parse(pdf);
+    const r = await ndi.profile!(doc);
+    const classify = calls.find((c) => c.url.includes("/documents/classify"))!;
+    const extract = calls.find((c) => c.url.includes("/documents/extract"))!;
+    expect(classify.body.source).toEqual({ type: "parse_result", job_id: "parse_1" });
+    expect(classify.body.classes.map((c: any) => c.id)).not.toContain("other");
+    expect(extract.body.source).toEqual({ type: "parse_result", job_id: "parse_1" });
+    expect(extract.body.schema.type).toBe("object");
+    expect(r.documentType).toEqual({ id: "contract", label: "Contract", confidence: 0.99, reason: "Titled Master Services Agreement." });
+    expect(r.keyFacts.map((k) => [k.field, k.label, k.value, k.status])).toEqual([
+      ["/title", "Title", PAGE1, "found"],
+      ["/parties", "Parties", null, "not_found"],
+      ["/effective_date", "Effective date", null, "not_found"],
+      ["/key_figures/0", "Monthly service fee", "$12,500", "found"],
+    ]);
+    const fee = r.keyFacts[3];
+    expect(fee.page).toBe(2);
+    expect(fee.quote).toBe(PAGE2);
+    expect(doc.text.slice(fee.charStart!, fee.charEnd!)).toBe(PAGE2);
+    expect(r.usage!.requests).toBe(2);
+    expect(r.warnings).toEqual([]);
+  });
+
+  it("a failed extract keeps the document type and adds a warning", async () => {
+    const { f } = fakeNdi({ failExtractWith: 500 });
+    const ndi = createNdiPerceiver(cfg, f);
+    const r = await ndi.profile!(await ndi.parse(pdf));
+    expect(r.documentType?.id).toBe("contract");
+    expect(r.keyFacts).toEqual([]);
+    expect(r.warnings[0]).toMatch(/could not extract/);
+  });
+
+  it("skips NDI when the built-in reader read the source", async () => {
+    const { f, calls } = fakeNdi();
+    const ndi = createNdiPerceiver(cfg, f);
+    const r = await ndi.profile!({ name: "x", format: "text", text: "hi", pages: [{ page: 1, start: 0, end: 2 }], parsedBy: "local" });
+    expect(r).toMatchObject({ documentType: null, keyFacts: [] });
+    expect(calls).toHaveLength(0);
   });
 });

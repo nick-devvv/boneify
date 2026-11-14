@@ -12,6 +12,8 @@
 //   POST /v1/workspaces/:ws/files          upload (X-Upload-Token + multipart file + metadata)
 //   POST /v1/documents/parse               parse job
 //   POST /v1/documents/ground              ground job
+//   POST /v1/documents/classify            classify job (document granularity: picks the class whose words the text uses most)
+//   POST /v1/documents/extract             extract job (string fields: first sentence naming the field; arrays: sentences with numbers)
 //   GET  /v1/documents/jobs/:id            job status: "running" on the first poll, "succeeded" on the next
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
@@ -215,7 +217,7 @@ export async function startMockNace(opts: MockOptions = {}): Promise<{ server: S
       return send(res, 200, { workspace_id: workspaceId, upload_url: `http://${host}/v1/workspaces/${workspaceId}/files`, token, expires_at: new Date(Date.now() + ttl * 1000).toISOString(), max_bytes: null });
     }
 
-    if (req.method === "POST" && (p === "/v1/documents/parse" || p === "/v1/documents/ground")) {
+    if (req.method === "POST" && ["/v1/documents/parse", "/v1/documents/ground", "/v1/documents/classify", "/v1/documents/extract"].includes(p)) {
       const wait = url.searchParams.get("wait_seconds");
       if (wait !== null && (!/^\d+$/.test(wait) || Number(wait) < 1 || Number(wait) > 100)) return err(res, 422, "invalid_request", "wait_seconds must be 1 to 100.");
       let body: any;
@@ -236,7 +238,7 @@ export async function startMockNace(opts: MockOptions = {}): Promise<{ server: S
           return err(res, 422, "unreadable_file", (e as Error).message);
         }
       } else if (src.type === "parse_result") {
-        if (p !== "/v1/documents/ground") return err(res, 422, "invalid_request", "parse_result is not a valid source for parse.");
+        if (p === "/v1/documents/parse") return err(res, 422, "invalid_request", "parse_result is not a valid source for parse.");
         const j = jobs.get(src.job_id);
         if (!j || j.kind !== "parse" || !j.parsed) return err(res, 422, "invalid_request", "source.job_id is not a finished parse job.", { issues: [{ path: ["source", "job_id"], message: "unknown parse job" }] });
         parsed = j.parsed;
@@ -262,6 +264,47 @@ export async function startMockNace(opts: MockOptions = {}): Promise<{ server: S
         document.markdown = formats.includes("markdown") ? parsed.text : null;
         document.blocks = formats.includes("blocks") ? toBlocks(parsed) : [];
         const job = makeJob("parse", { result_type: "parse", file_name: parsed.fileName, lane: parsed.lane, document, ocr_applied: false, units: parsed.pages.length, disclosures: [] }, { parsed, workspaceId: jobWorkspace });
+        return send(res, 202, envelope(job, "running"));
+      }
+
+      if (p === "/v1/documents/classify") {
+        const classes = body?.classes;
+        if (!Array.isArray(classes) || !classes.length) return err(res, 422, "invalid_request", "classes must have at least 1 entry.");
+        if (classes.some((c: any) => !c?.id || !c?.label || ["other", "blank_page", "unreadable_content", "__ndi_unclassified"].includes(c.id))) return err(res, 422, "invalid_request", "Each class needs an id and a label, and some ids are reserved.");
+        const words = parsed.text.toLowerCase();
+        const scored = classes.map((c: any) => {
+          const terms = `${c.label} ${c.description ?? ""}`.toLowerCase().match(/[a-z]{4,}/g) ?? [];
+          return { c, n: terms.reduce((sum, t) => sum + (words.split(t).length - 1), 0) };
+        }).sort((a: any, b: any) => b.n - a.n);
+        const total = scored.reduce((sum: number, x: any) => sum + x.n, 0) || 1;
+        const max = Math.max(1, Math.min(10, Number(body?.output?.max_alternatives ?? 3)));
+        const labels = scored.slice(0, max).map((x: any, i: number) => ({ class_id: x.c.id, subclass_id: null, label: x.c.label, rank: i + 1, reason: "Mock: shares the most words with this class.", confidence: Math.round((x.n / total) * 1000) / 1000 }));
+        const unit = { granularity: "document", page_range: { start: 1, end: parsed.pages.length }, unknown: scored[0].n === 0, labels };
+        const job = makeJob("classify", { result_type: "classify", units: [unit], unknown_units: unit.unknown ? 1 : 0, pages_read_fraction: 1, disclosures: [] }, { workspaceId: jobWorkspace });
+        return send(res, 202, envelope(job, "running"));
+      }
+
+      if (p === "/v1/documents/extract") {
+        const schema = body?.schema;
+        if (!schema || schema.type !== "object" || !schema.properties || !Object.keys(schema.properties).length) return err(res, 422, "invalid_schema", "The schema root must be an object with properties.");
+        const units = sourceUnits(parsed.text);
+        const cite = (u: { text: string; start: number }) => [{ location: { kind: "page_region", page: pageOf(parsed!.pages, u.start), polygons: [] }, source_text: u.text }];
+        const data: Record<string, unknown> = {};
+        const fields: unknown[] = [];
+        for (const [key, prop] of Object.entries<any>(schema.properties)) {
+          if (prop?.type === "array") {
+            const hits = units.filter((u) => /\d/.test(u.text)).slice(0, Number(prop.maxItems ?? 5));
+            data[key] = hits.map((u) => ({ what: u.text.split(/\s+/).slice(0, 4).join(" "), value: u.text.match(/[$€£]?\d[\d,.]*%?/)?.[0] ?? "" }));
+            fields.push({ path: `/${key}`, value: null, status: hits.length ? "found" : "not_found", confidence: null, citations: [] });
+            hits.forEach((u, i) => fields.push({ path: `/${key}/${i}`, value: JSON.stringify((data[key] as unknown[])[i]), status: "found", confidence: 0.8, citations: cite(u) }));
+            continue;
+          }
+          const terms = key.split("_").filter((t) => t.length >= 4);
+          const u = units.find((x) => terms.some((t) => x.text.toLowerCase().includes(t)));
+          data[key] = u ? u.text : null;
+          fields.push(u ? { path: `/${key}`, value: u.text, status: "found", confidence: 0.8, citations: cite(u) } : { path: `/${key}`, value: null, status: "not_found", confidence: null, citations: [] });
+        }
+        const job = makeJob("extract", { result_type: "extract", data, fields, schema_id: null, schema_version: null, units: 1, warnings: [] }, { workspaceId: jobWorkspace });
         return send(res, 202, envelope(job, "running"));
       }
 

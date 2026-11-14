@@ -26,6 +26,14 @@ export interface Config {
   baselineRun: string; // "" = the first llm-* run
 
   allowedOrigin: string;
+
+  // Intern (Nace's agent harness) for POST /api/fix. Runs only where the `intern` CLI is installed (not on Vercel).
+  internBin: string;        // "" = look for `intern` on PATH and in ~/.local/bin
+  internSystem1: string;    // the decision model Intern asks while it works
+  internSystem2: string;    // the agent model that writes
+  internMaxTurns: number;
+  internTimeoutMs: number;
+  deepinfraApiKey: string;
 }
 
 type Env = Record<string, string | undefined>;
@@ -73,6 +81,13 @@ export function getConfig(env: Env = process.env): Config {
     baselineRun: str(env, "BASELINE_RUN", ""),
 
     allowedOrigin: str(env, "ALLOWED_ORIGIN", "*"),
+
+    internBin: str(env, "INTERN_BIN", ""),
+    internSystem1: str(env, "INTERN_SYSTEM1", "drex-latest"),
+    internSystem2: str(env, "INTERN_SYSTEM2", "deepinfra/Qwen/Qwen3.8-27B"),
+    internMaxTurns: Math.round(num(env, "INTERN_MAX_TURNS", 16, 2, 60)),
+    internTimeoutMs: Math.round(num(env, "INTERN_TIMEOUT_SECONDS", 150, 10, 600) * 1000),
+    deepinfraApiKey: str(env, "DEEPINFRA_API_KEY", ""),
   };
 }
 

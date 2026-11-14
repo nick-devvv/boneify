@@ -7,12 +7,15 @@
 //             -> job; result.document {text, markdown, page_count, blocks[] with location {kind: page_region, page}}
 // 3. Ground:  POST /v1/documents/ground?wait_seconds=N {source: {type: parse_result, job_id}, targets: [{id, text, semantic: true}],
 //             options: {max_matches: 1}}, 1-30 targets per request -> result.targets[] {id, status, matches[]}
+// 4. Profile (optional extras, run beside ground):
+//    Classify: POST /v1/documents/classify {source: parse_result, classes, output} -> result.units[0].labels[] {class_id, label, rank, reason, confidence}
+//    Extract:  POST /v1/documents/extract  {source: parse_result, schema} -> result.data + result.fields[] {path, value, status, confidence, citations[] {location, source_text}}
 // Jobs not final yet are polled at GET /v1/documents/jobs/{id}: 1 s backing off to 10 s, giving up after 240 s.
 //
 // Fallbacks keep the demo alive: if NDI can't parse a source, the built-in reader takes over (with a warning);
 // a target that fails gets a built-in receipt (with a warning). If ground fails completely, the pipeline falls back too.
 
-import type { Claim, GroundResult, Perceiver, Receipt, SourceDocument, SourceInput, SourcePage, Usage } from "../types";
+import type { Claim, DocumentType, GroundResult, KeyFact, Perceiver, ProfileResult, Receipt, SourceDocument, SourceInput, SourcePage, Usage } from "../types";
 import { getConfig, type Config } from "../config";
 import { ProviderError } from "../errors";
 import { requestJson } from "../http";
@@ -33,7 +36,7 @@ interface NdiJob<R = unknown> {
   status: JobStatus;
   result?: R | null;
   error?: { code?: string; message?: string } | string | null;
-  cost?: number | { usd?: number; amount?: number; total?: number } | null;
+  cost?: number | { usd?: number; amount?: number; total?: number; total_usd?: string | number } | null;
   credits?: unknown;
 }
 interface Location { kind?: string; page?: number; char_start?: number; char_end?: number; [k: string]: unknown }
@@ -42,6 +45,42 @@ interface ParseResult { result_type?: string; file_name?: string; lane?: string;
 interface GroundTarget { id: string; status: "found" | "not_found" | "failed"; error?: unknown; matches?: Array<{ rank?: number; matched_text?: string; match_method?: string; confidence?: number | null; location?: Location; cropped_image_url?: string | null }> }
 interface GroundResultBody { result_type?: string; targets?: GroundTarget[] }
 
+interface ClassifyBody { units?: Array<{ unknown?: boolean; labels?: Array<{ class_id?: string; label?: string; rank?: number; reason?: string | null; confidence?: number | null }> }> }
+interface ExtractField { path?: string; value?: unknown; status?: string; confidence?: number | null; citations?: Array<{ location?: Location; source_text?: string | null }> }
+interface ExtractBody { data?: Record<string, unknown>; fields?: ExtractField[]; warnings?: unknown[] }
+
+/** The kinds of document boneify tells apart. Ids avoid NDI's reserved ones (other, blank_page, unreadable_content). */
+export const DOC_CLASSES = [
+  { id: "contract", label: "Contract", description: "An agreement between parties: terms, obligations, fees, renewal and termination" },
+  { id: "financial_report", label: "Financial report", description: "Earnings, results, revenue, margins, guidance or other financial figures for a period" },
+  { id: "invoice", label: "Invoice", description: "A bill listing items, amounts and a total due" },
+  { id: "policy", label: "Policy or handbook", description: "Rules, procedures or guidance for an organisation or its staff" },
+  { id: "article", label: "Article or research", description: "A paper, article, report or news story" },
+];
+
+/** One schema for every kind of document: who and when, plus the numbers a summary most often gets wrong. */
+export const KEY_FACTS_SCHEMA = {
+  type: "object",
+  properties: {
+    title: { type: "string", description: "The document's title or name" },
+    parties: { type: "string", description: "The parties, companies or organisations the document is about, comma-separated" },
+    effective_date: { type: "string", description: "The main date the document takes effect or covers, as written" },
+    key_figures: {
+      type: "array",
+      maxItems: 8,
+      description: "The most important numbers stated in the document: amounts, fees, percentages, durations, deadlines and counts",
+      items: {
+        type: "object",
+        properties: {
+          what: { type: "string", description: "What the number is, in 2 to 6 words" },
+          value: { type: "string", description: "The number exactly as written, with its unit" },
+        },
+      },
+    },
+  },
+} as const;
+const FIELD_LABELS: Record<string, string> = { title: "Title", parties: "Parties", effective_date: "Effective date" };
+
 const FINAL: JobStatus[] = ["succeeded", "failed", "cancelled"];
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -49,8 +88,9 @@ function jobCostUsd(job: NdiJob): number {
   const c = job.cost;
   if (typeof c === "number" && Number.isFinite(c)) return c;
   if (c && typeof c === "object") {
-    const v = c.usd ?? c.amount ?? c.total;
-    if (typeof v === "number" && Number.isFinite(v)) return v;
+    const v = c.usd ?? c.amount ?? c.total ?? c.total_usd; // the live API sends {total_usd: "0.0081", lines: [...]}
+    const n = typeof v === "string" ? Number(v) : v;
+    if (typeof n === "number" && Number.isFinite(n)) return n;
   }
   return 0;
 }
@@ -142,7 +182,8 @@ export function createNdiPerceiver(cfg: Config = getConfig(), fetchImpl?: typeof
     return current;
   }
 
-  async function createJob<R>(path: string, body: unknown): Promise<NdiJob<R>> {
+  // `acc` counts this job toward one operation's usage: ground and profile run at the same time, so a before/after diff would mix them.
+  async function createJob<R>(path: string, body: unknown, acc?: Usage): Promise<NdiJob<R>> {
     const job = await requestJson<NdiJob<R>>(
       `${base}${path}?wait_seconds=${wait}`,
       { method: "POST", headers: { ...auth(), "Content-Type": "application/json" }, body: JSON.stringify(body) },
@@ -153,6 +194,7 @@ export function createNdiPerceiver(cfg: Config = getConfig(), fetchImpl?: typeof
     if (done.status !== "succeeded") throw new ProviderError(PROVIDER, null, jobError(done));
     usage.requests += 1;
     usage.costUsd += jobCostUsd(done);
+    if (acc) { acc.requests += 1; acc.costUsd += jobCostUsd(done); }
     return done;
   }
 
@@ -194,7 +236,9 @@ export function createNdiPerceiver(cfg: Config = getConfig(), fetchImpl?: typeof
         let ids: { workspaceId?: string; fileId?: string } = {};
         if (input.kind === "url") {
           name = input.name || new URL(input.url).pathname.split("/").filter(Boolean).pop() || new URL(input.url).hostname;
-          source = { type: "url", url: input.url, file_name: safeName(name) };
+          // NDI picks its reader from the file name's extension; a page URL often has none ("/wiki/Golden_Gate_Bridge").
+          const fileName = /\.(pdf|html?|txt|md|json|csv|docx?|xlsx?|pptx?|rtf|xml|png|jpe?g)$/i.test(safeName(name)) ? safeName(name) : `${safeName(name)}.html`;
+          source = { type: "url", url: input.url, file_name: fileName };
         } else {
           const bytes = input.kind === "text" ? new TextEncoder().encode(input.text) : input.bytes;
           name = input.kind === "text" ? input.name || "source.txt" : input.name;
@@ -226,7 +270,7 @@ export function createNdiPerceiver(cfg: Config = getConfig(), fetchImpl?: typeof
     async ground(doc: SourceDocument, claims: Claim[]): Promise<GroundResult> {
       const t0 = performance.now();
       const warnings: string[] = [];
-      const before = { ...usage };
+      const used: Usage = { requests: 0, inputTokens: 0, outputTokens: 0, costUsd: 0 };
       if (!doc.ndi?.parseJobId && !doc.ndi?.fileId) {
         return {
           receipts: lexicalReceipts(doc, claims),
@@ -247,12 +291,12 @@ export function createNdiPerceiver(cfg: Config = getConfig(), fetchImpl?: typeof
         });
         let job: NdiJob<GroundResultBody>;
         try {
-          job = await createJob<GroundResultBody>("/documents/ground", body(useParseResult ? { type: "parse_result", job_id: doc.ndi!.parseJobId! } : { type: "workspace_file", workspace_id: doc.ndi!.workspaceId!, file_id: doc.ndi!.fileId! }));
+          job = await createJob<GroundResultBody>("/documents/ground", body(useParseResult ? { type: "parse_result", job_id: doc.ndi!.parseJobId! } : { type: "workspace_file", workspace_id: doc.ndi!.workspaceId!, file_id: doc.ndi!.fileId! }), used);
         } catch (err) {
           // Zero-retention accounts can't ground on a parse_result: retry once on the uploaded file itself.
           if (useParseResult && doc.ndi?.fileId && err instanceof ProviderError && err.status !== null && err.status >= 400 && err.status < 500 && err.status !== 401 && err.status !== 402) {
             useParseResult = false;
-            job = await createJob<GroundResultBody>("/documents/ground", body({ type: "workspace_file", workspace_id: doc.ndi!.workspaceId!, file_id: doc.ndi!.fileId! }));
+            job = await createJob<GroundResultBody>("/documents/ground", body({ type: "workspace_file", workspace_id: doc.ndi!.workspaceId!, file_id: doc.ndi!.fileId! }), used);
           } else {
             throw err;
           }
@@ -300,10 +344,94 @@ export function createNdiPerceiver(cfg: Config = getConfig(), fetchImpl?: typeof
       return {
         receipts,
         latencyMs: Math.round(performance.now() - t0),
-        usage: { requests: usage.requests - before.requests, inputTokens: 0, outputTokens: 0, costUsd: Math.round((usage.costUsd - before.costUsd) * 1e8) / 1e8 },
+        usage: { ...used, costUsd: Math.round(used.costUsd * 1e8) / 1e8 },
+        warnings,
+      };
+    },
+
+    async profile(doc: SourceDocument): Promise<ProfileResult> {
+      const t0 = performance.now();
+      const used: Usage = { requests: 0, inputTokens: 0, outputTokens: 0, costUsd: 0 };
+      if (!doc.ndi?.parseJobId && !doc.ndi?.fileId) return { documentType: null, keyFacts: [], latencyMs: 0, warnings: [] };
+      requireKey();
+      const warnings: string[] = [];
+      const parseSrc = doc.ndi?.parseJobId ? { type: "parse_result", job_id: doc.ndi.parseJobId } : null;
+      const fileSrc = doc.ndi?.fileId ? { type: "workspace_file", workspace_id: doc.ndi.workspaceId!, file_id: doc.ndi.fileId } : null;
+      // Reuse the parse (no second parse to pay for); on a 4xx (e.g. zero-retention accounts) retry on the uploaded file.
+      const run = async <R,>(path: string, rest: Record<string, unknown>) => {
+        try {
+          return await createJob<R>(path, { source: parseSrc ?? fileSrc, ...rest }, used);
+        } catch (err) {
+          if (parseSrc && fileSrc && err instanceof ProviderError && err.status !== null && err.status >= 400 && err.status < 500 && err.status !== 401 && err.status !== 402) {
+            return createJob<R>(path, { source: fileSrc, ...rest }, used);
+          }
+          throw err;
+        }
+      };
+      const [classified, extracted] = await Promise.allSettled([
+        run<ClassifyBody>("/documents/classify", { classes: DOC_CLASSES, granularity: "document", output: { max_alternatives: 1, include_reason: true } }),
+        run<ExtractBody>("/documents/extract", { schema: KEY_FACTS_SCHEMA, citations: { enabled: true, include_source_text: true } }),
+      ]);
+
+      let documentType: DocumentType | null = null;
+      if (classified.status === "fulfilled") {
+        const unit = classified.value.result?.units?.[0];
+        const top = (unit?.labels ?? []).slice().sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99))[0];
+        documentType = unit?.unknown || !top?.class_id
+          ? { id: "other", label: "Other", confidence: null, reason: top?.reason ?? null }
+          : { id: top.class_id, label: top.label || DOC_CLASSES.find((c) => c.id === top.class_id)?.label || top.class_id, confidence: typeof top.confidence === "number" ? top.confidence : null, reason: top.reason ?? null };
+      } else {
+        warnings.push(`NDI could not classify the document (${errText(classified.reason)}).`);
+      }
+
+      const keyFacts: KeyFact[] = [];
+      if (extracted.status === "fulfilled") {
+        const data = extracted.value.result?.data ?? {};
+        for (const f of extracted.value.result?.fields ?? []) {
+          const path = String(f.path ?? "");
+          const m = path.match(/^\/([a-z_]+)(?:\/(\d+))?$/);
+          if (!m) continue; // nested fields are covered by their array item
+          const [, key, idx] = m;
+          let label = FIELD_LABELS[key] ?? key.replace(/_/g, " ");
+          let value: unknown = data[key];
+          if (key === "key_figures") {
+            if (idx === undefined) continue; // the array itself; its items come one by one
+            const item = (Array.isArray(value) ? value[Number(idx)] : null) as { what?: string; value?: string } | null;
+            if (!item?.value) continue;
+            label = item.what || "Figure";
+            value = item.value;
+          }
+          const status = f.status === "found" || f.status === "ambiguous" ? f.status : "not_found";
+          const cite = (f.citations ?? []).find((c) => c.source_text) ?? f.citations?.[0];
+          const quote = cite?.source_text ? String(cite.source_text) : null;
+          const where = quote ? locate(doc, quote, cite?.location) : { start: null, end: null, page: typeof cite?.location?.page === "number" ? cite.location.page : null };
+          keyFacts.push({
+            field: path,
+            label,
+            value: value === null || value === undefined || value === "" ? null : String(value),
+            status: value === null || value === undefined || value === "" ? "not_found" : status,
+            page: where.page,
+            quote,
+            section: quote ? sectionFor(doc.text, where.start, where.end, quote) : null,
+            confidence: typeof f.confidence === "number" ? f.confidence : null,
+            charStart: where.start,
+            charEnd: where.end,
+          });
+        }
+      } else {
+        warnings.push(`NDI could not extract the key facts (${errText(extracted.reason)}).`);
+      }
+
+      return {
+        documentType,
+        keyFacts,
+        latencyMs: Math.round(performance.now() - t0),
+        usage: { ...used, costUsd: Math.round(used.costUsd * 1e8) / 1e8 },
         warnings,
       };
     },
   };
   return perceiver;
 }
+
+const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
