@@ -44,6 +44,6 @@ Drex vs GPT-6.1 Sol on 450 RAGTruth test answers (3,041 sentences labelled by pe
 
 ## Team
 
-[Nick](https://github.com/nick-devvv) (frontend and design) and [Anish Nallapu](https://github.com/anishnallapu) (backend and benchmark).
+[Nick Dev](https://github.com/nick-devvv) and [Anish Nallapu](https://github.com/anishnallapu)
 
 <sub>The companies in the sample contract are fictional.</sub>
