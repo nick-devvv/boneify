@@ -1,57 +1,74 @@
+<div align="center">
+
+<img src="docs/media/rex.svg" width="88" alt="Rex, the Boneify T-rex">
+
 # Boneify
 
-**Fossil or fiction?** Boneify checks every sentence an AI writes against the original document, and shows the page and clause that proves it. Built at Drexathon with Nace Drex, NDI, Intern, Adobe and DeepInfra.
+**Fossil or fiction?** Boneify checks every sentence an AI writes against the original document, and shows you the proof on the page.
 
-Each sentence of an AI summary gets one verdict: **Correct**, **Wrong** or **Made up**, with how sure Drex is, a "needs review" flag when it isn't, and a receipt: the page, the clause number and the quote from the original, highlighted in the real PDF.
+🥇 **1st place, Adobe track** · 🥈 **2nd place overall** · Drexathon 2026
 
-## Drex vs GPT-6.1 (Track 1)
+[Live app](https://boneify.vercel.app) · [Slides](https://boneify-slides.vercel.app) · [Drexathon entry](https://github.com/nace-ai/intern/pull/39)
 
-Same 450 RAGTruth test answers (3,041 sentences, graded against the human answer key), from `GET /api/benchmark`:
+<br>
 
-| | Accuracy (sentence F1) | Median time per answer | Cost per 1,000 sentences |
-|---|---|---|---|
-| **Drex Max v1.1** | **0.56** | **0.32 s** | **$0.015** |
-| GPT-6.1 Sol | 0.51 | 4.08 s | $0.654 |
+<img src="docs/media/demo.gif" width="100%" alt="Boneify checking a contract summary: each sentence cracks open as correct, wrong or made up, then the proof opens in Adobe's PDF viewer">
 
-**12.9× faster, 45× cheaper and 10% more accurate**, and Drex wins each of the three types of writing on its own.
+</div>
 
-## How it works
+## What it does
 
-1. **NDI reads it.** Any PDF, Word file or scan, page by page.
-2. **Drex checks it.** Every sentence at once: correct, wrong or made up.
-3. **You get the receipt.** The page and clause for each sentence, highlighted in the PDF with the Adobe PDF Embed API.
-4. **Fix with Intern.** Intern (Nace's agent harness, Drex as System 1, a DeepInfra model as System 2) rewrites only the flagged sentences from their receipts, and Boneify checks the rewrite again. NDI also pulls out the document's key facts, each with its citation.
+Add the original document, paste what an AI wrote about it and press **Check**. Every sentence comes back **Correct**, **Wrong** or **Made up**, with a receipt: the page, the clause and the quote, boxed in the real PDF.
 
-## The site
-
-| Page | What it does |
+| | |
 |---|---|
-| `/` | The story: scroll to dig up the fossil, one bone per sentence. |
-| `/demo` | The check played once in five steps (arrows, captions, ← →). Replays the recorded check, or runs it live when Drex and NDI are on. |
-| `/check` | Try it: add a document (or pick a sample), paste the AI's text, press Check. Brush the sand while you wait. |
-| `/scoreboard` | The proof: faster, cheaper, more accurate, the race, the scores and what it means for a firm. |
+| **Read** | NDI (Nace Document Intelligence) reads the original, whether it's a PDF, Word file or scan, and pulls out the key facts with citations. |
+| **Check** | Drex checks every sentence at once and says how sure it is. Anything under 60% is flagged for a person to review. |
+| **Prove** | The Adobe PDF Embed API opens the real PDF with a box on each clause: green for correct, red for wrong. Click a sentence to jump to its box. |
+| **Fix** | Intern rewrites only the flagged sentences from their receipts, then Boneify checks the rewrite again. |
 
-Dark mode is the moon button in every header.
+## Results
 
-## Run it
+Drex vs GPT-6.1 Sol on 450 RAGTruth test answers (3,041 sentences labelled by people), from `GET /api/benchmark`:
+
+| | Sentence F1 | Median time per answer | Cost per 1,000 sentences | False alarms |
+|---|:---:|:---:|:---:|:---:|
+| **Drex Max v1.1** | **0.56** | **0.32 s** | **$0.015** | **354** |
+| GPT-6.1 Sol | 0.51 | 4.08 s | $0.65 | 456 |
+
+**12.9× faster, 45× cheaper and 10% more accurate**, and Drex comes out ahead on all three task types (answers, summaries and data reports).
+
+## Screenshots
+
+| Home | The receipt | Scoreboard |
+|:---:|:---:|:---:|
+| <img src="docs/media/home.jpg" alt="Boneify home page: Fossil or fiction?"> | <img src="docs/media/results.jpg" alt="Results: 3 of 10 sentences have problems, with the proof boxed in Adobe's PDF viewer"> | <img src="docs/media/scoreboard.jpg" alt="Scoreboard: Drex vs GPT-6.1, faster, cheaper, more accurate"> |
+
+## Run it locally
 
 ```bash
+git clone https://github.com/nick-devvv/boneify
+cd boneify
 npm install
-cp .env.example .env.local   # keys go here only, never in git
+cp .env.example .env.local   # keys stay here, never in git
 npm run dev                  # http://localhost:3000
 ```
 
-Without keys everything runs offline (built-in reader and simple rules). With keys, set:
+With no keys it runs offline, using the built-in reader and simple rules. To use the real engines, set these in `.env.local`:
 
-- `DECIDER=drex`, `PERCEIVER=ndi`, `NACE_BASE_URL`, `NACE_API_KEY`: Drex and NDI.
-- `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_LABEL`: the big AI model in the race.
-- `NEXT_PUBLIC_ADOBE_CLIENT_ID`: a free Adobe PDF Embed API key for the site's domain. Without it, Try it draws the contract page itself.
+- **Drex and NDI:** `DECIDER=drex`, `PERCEIVER=ndi`, `NACE_BASE_URL`, `NACE_API_KEY`
+- **The comparison model:** `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_LABEL` (any OpenAI-compatible API)
 
-Re-record the demo with the real engines (the demo and the offline fallback replay this file):
+The Adobe viewer only loads on the live site's domain. Locally, the proof shows on a page Boneify draws itself.
 
-```bash
-curl -s -X POST localhost:3000/api/check -H 'content-type: application/json' \
-  -d '{"sampleId":"msa-summary","compare":"llm"}' > data/demo/recorded-check.json
-```
+`npm test` runs the test suite, and `npm run bench` re-runs the benchmark. The API is documented in [`docs/MVP_SPEC.md`](docs/MVP_SPEC.md).
 
-More: `docs/MVP_SPEC.md` (API), `docs/DECISIONS.md`, `docs/FRONTEND.md`. Sample companies are fictional.
+## Built with
+
+[Nace Drex](https://nace.ai) · NDI · [Intern](https://github.com/nace-ai/intern) · Adobe PDF Embed API · DeepInfra · Next.js · Vercel
+
+## Team
+
+[Nick](https://github.com/nick-devvv) (frontend and design) and [Anish Nallapu](https://github.com/anishnallapu) (backend and benchmark).
+
+<sub>The companies in the sample contract are fictional.</sub>
