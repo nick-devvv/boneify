@@ -7,6 +7,7 @@ import "@fontsource/instrument-serif/400-italic.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://boneify.vercel.app"),
   title: "Boneify · Fossil or fiction?",
   description: "Boneify checks every sentence an AI writes against the original document, and shows the page and clause that proves it.",
 };
