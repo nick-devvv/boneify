@@ -38,6 +38,27 @@ Drex vs GPT-6.1 Sol on 450 RAGTruth test answers (3,041 sentences labelled by pe
 
 **12.9× faster, 45× cheaper and 10% more accurate**, and Drex comes out ahead on all three task types (answers, summaries and data reports).
 
+## Run it locally
+
+```bash
+git clone https://github.com/nick-devvv/boneify
+cd boneify
+npm install
+cp .env.example .env.local
+npm run dev   # http://localhost:3000
+```
+
+With no keys it runs offline, using a built-in reader and simple rules. To use Drex and NDI, add your own Nace API key to `.env.local`:
+
+```bash
+DECIDER=drex
+PERCEIVER=ndi
+NACE_BASE_URL=https://console.nace.ai
+NACE_API_KEY=your-nace-key
+```
+
+To run the GPT comparison too, add `LLM_API_KEY`, `LLM_BASE_URL` and `LLM_MODEL` for any OpenAI-compatible API. Adobe's viewer only loads on the live site, so locally the proof shows on a page Boneify draws itself.
+
 ## Built with
 
 [Nace Drex](https://nace.ai) · NDI · [Intern](https://github.com/nace-ai/intern) · Adobe PDF Embed API · DeepInfra · Next.js · Vercel
