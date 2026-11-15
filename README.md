@@ -38,14 +38,6 @@ Drex vs GPT-6.1 Sol on 450 RAGTruth test answers (3,041 sentences labelled by pe
 
 **12.9× faster, 45× cheaper and 10% more accurate**, and Drex comes out ahead on all three task types (answers, summaries and data reports).
 
-## Run it
-
-```bash
-npm install && npm run dev
-```
-
-It runs offline with no keys. Add your Nace keys to `.env.local` (see `.env.example`) to use Drex and NDI.
-
 ## Built with
 
 [Nace Drex](https://nace.ai) · NDI · [Intern](https://github.com/nace-ai/intern) · Adobe PDF Embed API · DeepInfra · Next.js · Vercel
