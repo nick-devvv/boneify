@@ -38,37 +38,12 @@ Drex vs GPT-6.1 Sol on 450 RAGTruth test answers (3,041 sentences labelled by pe
 
 **12.9× faster, 45× cheaper and 10% more accurate**, and Drex comes out ahead on all three task types (answers, summaries and data reports).
 
-## Screenshots
-
-| Home | The receipt | Scoreboard |
-|:---:|:---:|:---:|
-| <img src="docs/media/home.jpg" alt="Boneify home page: Fossil or fiction?"> | <img src="docs/media/results.jpg" alt="Results: 3 of 10 sentences have problems, with the proof boxed in Adobe's PDF viewer"> | <img src="docs/media/scoreboard.jpg" alt="Scoreboard: Drex vs GPT-6.1, faster, cheaper, more accurate"> |
-
-## Run it locally
-
-```bash
-git clone https://github.com/nick-devvv/boneify
-cd boneify
-npm install
-cp .env.example .env.local   # keys stay here, never in git
-npm run dev                  # http://localhost:3000
-```
-
-With no keys it runs offline, using the built-in reader and simple rules. To use the real engines, set these in `.env.local`:
-
-- **Drex and NDI:** `DECIDER=drex`, `PERCEIVER=ndi`, `NACE_BASE_URL`, `NACE_API_KEY`
-- **The comparison model:** `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_LABEL` (any OpenAI-compatible API)
-
-The Adobe viewer only loads on the live site's domain. Locally, the proof shows on a page Boneify draws itself.
-
-`npm test` runs the test suite, and `npm run bench` re-runs the benchmark. The API is documented in [`docs/MVP_SPEC.md`](docs/MVP_SPEC.md).
-
 ## Built with
 
 [Nace Drex](https://nace.ai) · NDI · [Intern](https://github.com/nace-ai/intern) · Adobe PDF Embed API · DeepInfra · Next.js · Vercel
 
 ## Team
 
-[Nick](https://github.com/nick-devvv) (frontend and design) and [Anish Nallapu](https://github.com/anishnallapu) (backend and benchmark).
+[Nick Dev](https://github.com/nick-devvv) and [Anish Nallapu](https://github.com/anishnallapu)
 
 <sub>The companies in the sample contract are fictional.</sub>
