@@ -149,8 +149,10 @@ export function CheckApp() {
       if (input) res = await check(input);
     } catch (e) {
       const f = e as ApiFailure;
-      // The venue Wi-Fi fallback: the recorded contract check, clearly labelled.
-      if (f.network && canRecord) { res = RECORDED; usedOffline = true; }
+      // No connection, or the live engines are off (keys removed after the event): show the recorded real check of
+      // the contract sample instead, clearly labelled. Mistakes in the request itself (4xx) still show their error.
+      const enginesDown = f.network || f.status >= 500 || f.status === 401 || f.status === 402 || f.code.startsWith("provider_");
+      if (enginesDown && canRecord) { res = RECORDED; usedOffline = true; }
       else { setRunError(friendlyError(f)); return; }
     }
     if (!res) return;
